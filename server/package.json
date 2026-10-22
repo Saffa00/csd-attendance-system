@@ -1,0 +1,26 @@
+{
+  "name": "cs-attendance-api",
+  "version": "1.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch src/index.js",
+    "start": "node src/index.js",
+    "test": "node --test",
+    "create-hod": "node src/create-hod.js",
+    "delete-users": "node src/delete-users.js",
+    "check": "node --check src/index.js && node --check src/utils.js && node --check src/middleware.js && node --check src/limits.js && node --check src/services.js && node --check src/finalize.js && node --check src/routes/auth.js && node --check src/routes/hod.js && node --check src/routes/students.js && node --check src/routes/rep.js && node --check src/routes/lecturer.js && node --check src/routes/student.js && node --check src/routes/attendance.js && node --check src/routes/reports.js && node --check src/routes/common.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.57.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "exceljs": "^4.4.0",
+    "express": "^4.21.2",
+    "express-async-errors": "^3.1.1",
+    "express-rate-limit": "^7.5.0",
+    "helmet": "^8.0.0",
+    "pdfkit": "^0.16.0",
+    "pdfmake": "^0.3.12",
+    "zod": "^3.24.1"
+  }
+}

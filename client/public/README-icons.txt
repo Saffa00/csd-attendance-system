@@ -1,0 +1,1 @@
+Create pwa-192.png and pwa-512.png icon files and place them here, or update vite.config.js to use SVG icons.

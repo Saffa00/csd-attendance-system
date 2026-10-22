@@ -1,0 +1,31 @@
+services:
+  - type: web
+    name: cs-attendance-api
+    runtime: node
+    rootDir: server
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: TRUST_PROXY
+        value: "1"
+      - key: AUTO_FINALIZE
+        value: "true"
+      - key: TEMP_PASSWORD_HOURS
+        value: "24"
+      - key: APP_TIMEZONE
+        value: Africa/Freetown
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: CLIENT_ORIGIN
+        sync: false
+      - key: QR_SECRET
+        generateValue: true
+      - key: APP_LOGIN_URL
+        sync: false
