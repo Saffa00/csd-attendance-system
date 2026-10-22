@@ -43,7 +43,13 @@ app.use('/api/auth/register', express.json({ limit: '5mb' }));
 app.use(['/api/venues/:id/image', '/api/venues/upload-image'], express.json({ limit: '5mb' }));
 app.use(express.json({ limit: '30kb' }));
 
-app.get('/health', (_, res) => res.json({ ok: true }));
+app.get('/', (_, res) => res.json({
+  service: 'CS Department Attendance System API',
+  status: 'online',
+  health: '/health',
+  docs: 'Use /api routes for departmental requests'
+}));
+app.get('/health', (_, res) => res.json({ ok: true, status: 'healthy', timestamp: new Date().toISOString() }));
 app.use('/api', authRoutes, hodRoutes, studentAdminRoutes, repRoutes, lecturerRoutes, studentRoutes, attendanceRoutes, reportRoutes, commonRoutes, venuesRoutes, announcementsRoutes, excusesRoutes, profileRoutes);
 app.use('/api', (req, res) => res.status(404).json({ error: 'Not found' }));
 app.use((err, req, res, next) => {
