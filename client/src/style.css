@@ -23,7 +23,22 @@
 }
 
 * { box-sizing: border-box; }
-body { margin: 0; min-width: 320px; background: var(--bg); }
+html, body {
+  margin: 0;
+  min-width: 320px;
+  max-width: 100vw !important;
+  width: 100% !important;
+  overflow-x: hidden !important;
+  background: var(--bg);
+  touch-action: pan-y;
+  position: relative;
+}
+#root {
+  max-width: 100vw !important;
+  width: 100% !important;
+  overflow-x: hidden !important;
+  min-height: 100dvh;
+}
 button, input, select, textarea { font: inherit; }
 svg.lucide, .lucide { display: inline-block; vertical-align: middle; }
 

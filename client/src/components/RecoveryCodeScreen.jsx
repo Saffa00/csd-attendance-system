@@ -163,49 +163,62 @@ export default function RecoveryCodeScreen({
   };
 
   return (
-    <div className="fixed inset-0 z-[99999] bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
-      <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl border border-slate-200/80 overflow-hidden my-auto animate-in fade-in zoom-in-95 duration-200">
+    <div
+      className="fixed inset-0 z-[99999] bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-2 sm:p-5 overflow-y-auto overflow-x-hidden w-full max-w-[100vw] box-border"
+      style={{ touchAction: 'pan-y' }}
+    >
+      <div
+        className="bg-white w-full max-w-[calc(100vw-16px)] sm:max-w-lg rounded-2xl sm:rounded-3xl shadow-2xl border border-slate-200/80 overflow-hidden my-auto animate-in fade-in zoom-in-95 duration-200 box-border"
+        style={{ overflowX: 'hidden' }}
+      >
         {/* Top University Branding Bar */}
-        <div className="bg-gradient-to-r from-[#102a43] via-[#1b3a5b] to-[#102a43] p-5 text-center text-white relative">
-          <div className="w-14 h-14 mx-auto mb-2.5 rounded-2xl bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center text-emerald-300 shadow-inner">
-            <KeyRound size={28} className="animate-pulse" />
+        <div className="bg-gradient-to-r from-[#102a43] via-[#1b3a5b] to-[#102a43] p-4 sm:p-5 text-center text-white relative box-border">
+          <div className="w-12 h-12 sm:w-14 sm:h-14 mx-auto mb-2 rounded-2xl bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center text-emerald-300 shadow-inner">
+            <KeyRound size={26} className="animate-pulse" />
           </div>
-          <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white m-0">
+          <h2 className="text-lg sm:text-2xl font-black tracking-tight text-white m-0 break-words" style={{ overflowWrap: 'anywhere' }}>
             {title}
           </h2>
-          <p className="text-xs text-slate-300 font-medium mt-1">
+          <p className="text-[11px] sm:text-xs text-slate-300 font-medium mt-1 break-words" style={{ overflowWrap: 'anywhere' }}>
             Milton Margai Technical University • Computer Science
           </p>
         </div>
 
         {/* Content Body */}
-        <div className="p-5 sm:p-7 space-y-4">
+        <div className="p-3.5 sm:p-7 space-y-3.5 sm:space-y-4 box-border w-full">
           {/* Required one-line explanation */}
-          <div className="bg-emerald-50/80 border border-emerald-200/90 rounded-2xl p-3.5 text-center">
-            <p className="text-sm font-bold text-emerald-950 m-0 leading-relaxed">
+          <div className="bg-emerald-50/80 border border-emerald-200/90 rounded-xl sm:rounded-2xl p-3 sm:p-3.5 text-center box-border w-full">
+            <p className="text-xs sm:text-sm font-bold text-emerald-950 m-0 leading-relaxed break-words" style={{ overflowWrap: 'anywhere' }}>
               &ldquo;If you forget your password, this code lets you set a new one yourself.&rdquo;
             </p>
           </div>
 
           {/* Prominent Code Card */}
-          <div className="bg-slate-900 rounded-2xl p-4 sm:p-5 border-2 border-dashed border-emerald-500/60 shadow-inner text-center relative group w-full max-w-full box-border overflow-hidden">
-            <div className="text-[11px] font-bold text-emerald-400 uppercase tracking-wider mb-2">
+          <div className="bg-slate-900 rounded-xl sm:rounded-2xl p-3.5 sm:p-5 border-2 border-dashed border-emerald-500/60 shadow-inner text-center relative group w-full max-w-full box-border overflow-hidden">
+            <div className="text-[10px] sm:text-[11px] font-bold text-emerald-400 uppercase tracking-wider mb-1.5 sm:mb-2">
               Your Personal Single-Use Recovery Code
             </div>
-            <div className="font-mono text-xl sm:text-2xl font-black text-emerald-300 tracking-[1px] sm:tracking-[2px] select-all py-1 break-all" style={{ overflowWrap: 'anywhere' }}>
+            <div
+              className="font-mono text-base sm:text-2xl font-black text-emerald-300 select-all py-1 break-all w-full box-border"
+              style={{
+                overflowWrap: 'anywhere',
+                wordBreak: 'break-all',
+                letterSpacing: 'clamp(0.5px, 0.8vw, 2px)'
+              }}
+            >
               {code}
             </div>
-            <div className="text-[11px] text-slate-400 mt-2" style={{ overflowWrap: 'anywhere' }}>
+            <div className="text-[10px] sm:text-[11px] text-slate-400 mt-1.5 sm:mt-2 break-words" style={{ overflowWrap: 'anywhere' }}>
               Assigned to: <strong className="text-white">{studentName}</strong> {studentId ? `(${studentId})` : ''}
             </div>
           </div>
 
           {/* Action Buttons: Copy & Download Image */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-2.5 w-full box-border">
             <button
               type="button"
               onClick={handleCopy}
-              className={`flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-xs font-bold transition shadow-xs cursor-pointer border ${
+              className={`flex items-center justify-center gap-2 py-2.5 sm:py-3 px-3 sm:px-4 rounded-xl text-xs font-bold transition shadow-xs cursor-pointer border w-full box-border ${
                 copied
                   ? 'bg-emerald-600 text-white border-emerald-600'
                   : 'bg-white hover:bg-slate-50 text-slate-800 border-slate-300'
@@ -219,7 +232,7 @@ export default function RecoveryCodeScreen({
               type="button"
               onClick={handleDownloadImage}
               disabled={downloading}
-              className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 transition shadow-xs cursor-pointer"
+              className="flex items-center justify-center gap-2 py-2.5 sm:py-3 px-3 sm:px-4 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 transition shadow-xs cursor-pointer w-full box-border"
             >
               <Download size={16} />
               {downloading ? 'Preparing Image…' : 'Download as Image'}
@@ -227,18 +240,18 @@ export default function RecoveryCodeScreen({
           </div>
 
           {/* Security Alert */}
-          <div className="flex items-start gap-2.5 bg-amber-50 border border-amber-200/80 rounded-xl p-3 text-amber-900 text-xs leading-normal">
-            <AlertTriangle size={18} className="text-amber-600 shrink-0 mt-0.5" />
-            <div>
+          <div className="flex items-start gap-2 bg-amber-50 border border-amber-200/80 rounded-xl p-2.5 sm:p-3 text-amber-900 text-[11px] sm:text-xs leading-normal box-border w-full">
+            <AlertTriangle size={16} className="text-amber-600 shrink-0 mt-0.5" />
+            <div className="min-w-0 flex-1">
               <strong className="font-bold">Important Security Notice:</strong>
-              <span className="block mt-0.5 text-amber-800">
+              <span className="block mt-0.5 text-amber-800 break-words" style={{ overflowWrap: 'anywhere' }}>
                 This code will <strong>never be shown again</strong> once you leave this screen. Save the image or write it down now.
               </span>
             </div>
           </div>
 
           {/* Checkbox: I have saved this code */}
-          <label className="flex items-start gap-3 p-3.5 rounded-xl border border-slate-200 hover:border-slate-300 bg-slate-50/70 cursor-pointer transition select-none">
+          <label className="flex items-start gap-2.5 p-2.5 sm:p-3.5 rounded-xl border border-slate-200 hover:border-slate-300 bg-slate-50/70 cursor-pointer transition select-none w-full box-border">
             <input
               type="checkbox"
               id="confirmSavedCode"
@@ -246,7 +259,7 @@ export default function RecoveryCodeScreen({
               onChange={e => setConfirmed(e.target.checked)}
               className="mt-0.5 h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer shrink-0"
             />
-            <span className="text-xs font-semibold text-slate-700 leading-snug">
+            <span className="text-[11px] sm:text-xs font-semibold text-slate-700 leading-snug break-words flex-1 min-w-0" style={{ overflowWrap: 'anywhere' }}>
               I have saved this code in a secure location and understand it cannot be displayed again.
             </span>
           </label>
@@ -256,7 +269,7 @@ export default function RecoveryCodeScreen({
             type="button"
             onClick={onContinue}
             disabled={!confirmed}
-            className={`w-full py-3.5 px-5 rounded-2xl text-sm font-bold shadow-md transition flex items-center justify-center gap-2 cursor-pointer ${
+            className={`w-full py-3 sm:py-3.5 px-4 sm:px-5 rounded-xl sm:rounded-2xl text-xs sm:text-sm font-bold shadow-md transition flex items-center justify-center gap-2 cursor-pointer box-border ${
               confirmed
                 ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/20'
                 : 'bg-slate-200 text-slate-400 cursor-not-allowed border border-slate-200'
