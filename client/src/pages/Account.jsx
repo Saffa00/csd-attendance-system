@@ -162,7 +162,7 @@ function processImage(file) {
           const dx = (targetSize - drawW) / 2;
           const dy = (targetSize - drawH) / 2;
 
-          ctx.fillStyle = '#f1f5f9';
+          ctx.fillStyle = '#ffffff';
           ctx.beginPath();
           ctx.arc(targetSize / 2, targetSize / 2, targetSize / 2, 0, Math.PI * 2);
           ctx.fill();
@@ -846,7 +846,7 @@ export default function Account() {
       {showPhotoModal && (
         <Modal title="Profile Picture Options" onClose={() => setShowPhotoModal(false)}>
           <div className="p-2 space-y-3">
-            <div className="flex flex-col items-center justify-center p-3 text-center bg-slate-50 rounded-2xl mb-3">
+            <div className="flex flex-col items-center justify-center p-3 text-center bg-white border border-slate-200/80 rounded-2xl mb-3">
               <Avatar user={profile} size={80} className="ring-4 ring-white shadow-md mb-2" />
               <p className="text-xs text-slate-500">
                 Capture your full photo in a clear circle. Choose a camera selfie or upload an existing picture.

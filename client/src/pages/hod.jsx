@@ -357,6 +357,10 @@ export function HodHome() {
   const dateStr = currentTime.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
   const timeStr = currentTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
 
+  const currentHour = currentTime.getHours();
+  const greeting = currentHour < 12 ? 'Good morning' : currentHour < 17 ? 'Good afternoon' : 'Good evening';
+  const fullName = profile.full_name || 'Mr Bilal Sesay';
+
   return (
     <div className="hod-dashboard">
       {/* Top Header & Breadcrumb */}
@@ -369,7 +373,7 @@ export function HodHome() {
 
         <div className="hod-welcome-banner">
           <div className="hod-welcome-left">
-            <h1 className="hod-welcome-title">Welcome Back, {profile.full_name || 'Mr Bilal Sesay'}!</h1>
+            <h1 className="hod-welcome-title">{greeting}, {fullName}!</h1>
             <p className="hod-welcome-desc">Here's an overview of the Computer Science Department activities.</p>
           </div>
 

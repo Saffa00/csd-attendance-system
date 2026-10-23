@@ -55,7 +55,7 @@ export default function More() {
     await signOut();
   };
 
-  // Remaining Buttons for HOD
+  // Remaining Buttons for HOD (Not on footer: Home, Attendance, Reports, Modules, More)
   const hodButtons = [
     {
       to: '/announcements',
@@ -113,10 +113,18 @@ export default function More() {
       desc: 'Department terms, semester settings, and minimum attendance %',
       icon: Settings,
       color: 'bg-slate-100 text-slate-700'
+    },
+    {
+      to: '/notifications',
+      label: 'Notifications Center',
+      desc: 'System alerts, attendance reminders, and announcements',
+      icon: Bell,
+      badge: unread > 0 ? `${unread} Unread` : null,
+      color: 'bg-emerald-50 text-emerald-600'
     }
   ];
 
-  // Remaining Buttons for Lecturer
+  // Remaining Buttons for Lecturer (Not on footer: Home, Sessions, Approvals, Modules, More)
   const lecturerButtons = [
     {
       to: '/announcements',
@@ -125,6 +133,13 @@ export default function More() {
       icon: Megaphone,
       badge: announcementsCount ? `${announcementsCount} Active` : null,
       color: 'bg-amber-50 text-amber-600'
+    },
+    {
+      to: '/reports',
+      label: 'Reports & Export',
+      desc: 'Export course attendance summaries, spreadsheets, and percentages',
+      icon: FileText,
+      color: 'bg-blue-50 text-blue-600'
     },
     {
       to: '/students-at-risk',
@@ -141,15 +156,16 @@ export default function More() {
       color: 'bg-purple-50 text-purple-600'
     },
     {
-      to: '/reports',
-      label: 'Reports & Export',
-      desc: 'Export course attendance summaries, spreadsheets, and percentages',
-      icon: FileText,
-      color: 'bg-blue-50 text-blue-600'
+      to: '/notifications',
+      label: 'Notifications Center',
+      desc: 'Class alerts, attendance reminders, and department updates',
+      icon: Bell,
+      badge: unread > 0 ? `${unread} Unread` : null,
+      color: 'bg-emerald-50 text-emerald-600'
     }
   ];
 
-  // Remaining Buttons for Class Rep
+  // Remaining Buttons for Class Rep (Not on footer: Home, Timetable, Students, Modules, More)
   const repButtons = [
     {
       to: '/announcements',
@@ -158,6 +174,13 @@ export default function More() {
       icon: Megaphone,
       badge: announcementsCount ? `${announcementsCount} Active` : null,
       color: 'bg-amber-50 text-amber-600'
+    },
+    {
+      to: '/attendance',
+      label: 'Class Attendance Live',
+      desc: 'Monitor live check-in statuses and marked attendance',
+      icon: ClipboardCheck,
+      color: 'bg-emerald-50 text-emerald-600'
     },
     {
       to: '/reports',
@@ -174,15 +197,16 @@ export default function More() {
       color: 'bg-purple-50 text-purple-600'
     },
     {
-      to: '/timetable',
-      label: 'Class Timetable',
-      desc: 'Review weekly lecture schedule and hall allocations',
-      icon: CalendarDays,
-      color: 'bg-emerald-50 text-emerald-600'
+      to: '/notifications',
+      label: 'Notifications Center',
+      desc: 'Class notices, lecture alerts, and attendance approvals',
+      icon: Bell,
+      badge: unread > 0 ? `${unread} Unread` : null,
+      color: 'bg-amber-50 text-amber-600'
     }
   ];
 
-  // Remaining Buttons for Student
+  // Remaining Buttons for Student (Not on footer: Home, Timetable, Attendance, Modules, More)
   const studentButtons = [
     {
       to: '/announcements',
@@ -213,13 +237,6 @@ export default function More() {
       icon: Bell,
       badge: unread > 0 ? `${unread} Unread` : null,
       color: 'bg-emerald-50 text-emerald-600'
-    },
-    {
-      to: '/timetable',
-      label: 'Weekly Timetable',
-      desc: 'View weekly lecture timetable and room assignments',
-      icon: CalendarDays,
-      color: 'bg-indigo-50 text-indigo-600'
     }
   ];
 

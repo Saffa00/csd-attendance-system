@@ -126,6 +126,10 @@ export function RepHome() {
     };
   });
 
+  const currentHour = currentTime.getHours();
+  const greeting = currentHour < 12 ? 'Good morning' : currentHour < 17 ? 'Good afternoon' : 'Good evening';
+  const fullName = profile.full_name || 'Class Representative';
+
   return (
     <div className="hod-dashboard">
       {/* Top Header & Breadcrumb */}
@@ -142,7 +146,7 @@ export function RepHome() {
             <span style={{ fontSize: 11, fontWeight: 750, color: '#2563eb', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               MILTON MARGAI CS PORTAL · CLASS REPRESENTATIVE
             </span>
-            <h1 className="hod-welcome-title">Welcome Back, {firstName}!</h1>
+            <h1 className="hod-welcome-title">{greeting}, {fullName}!</h1>
             <p className="hod-welcome-desc">
               Class Representative · {progLabel} · {levelLabel} · Milton Margai Technical University
             </p>

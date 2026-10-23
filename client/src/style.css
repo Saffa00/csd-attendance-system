@@ -1652,6 +1652,7 @@ button:disabled {
   overflow: hidden !important;
   display: block;
   flex-shrink: 0 !important;
+  background-color: transparent !important;
 }
 .app-avatar-initials {
   border-radius: 50% !important;
@@ -1676,7 +1677,7 @@ button:disabled {
   align-items: center;
   gap: 20px;
   padding: 16px;
-  background: #f8fafc;
+  background: #ffffff;
   border: 1px solid #e2e8f0;
   border-radius: 14px;
   margin-bottom: 16px;
@@ -3461,6 +3462,12 @@ button:disabled {
   font-size: 13px;
   color: #64748b;
   font-weight: 500;
+}
+
+@media (max-width: 899px) {
+  .hod-breadcrumb {
+    display: none !important;
+  }
 }
 
 .hod-breadcrumb-link {

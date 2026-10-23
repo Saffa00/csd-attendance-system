@@ -421,7 +421,7 @@ export function StudentHome() {
               <span className="student-meta-dot">·</span>
               <span className="small muted">Student Portal</span>
             </div>
-            <h2 className="student-greeting-title">{greeting}, {firstName}</h2>
+            <h2 className="student-greeting-title">{greeting}, {profile.full_name || firstName}</h2>
             <div className="student-meta-line">
               <span className="student-meta-item"><strong>{programmeName}</strong></span>
               <span className="student-meta-dot">·</span>
