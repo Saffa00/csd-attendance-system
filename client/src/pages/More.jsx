@@ -250,15 +250,15 @@ export default function More() {
 
   return (
     <div className="dept-hub-wrapper max-w-5xl mx-auto px-2 sm:px-4 py-4 space-y-5">
-      {/* 1. Breadcrumbs */}
-      <div className="flex items-center gap-2 text-xs text-slate-500 font-medium">
-        <Link to="/" className="text-primary hover:underline">Home</Link>
+      {/* 1. Breadcrumbs (Desktop Only) */}
+      <div className="hidden md:flex items-center gap-2 text-xs text-slate-500 font-medium">
+        <Link to="/" className="text-primary no-underline hover:underline">Home</Link>
         <span>›</span>
         <span className="text-slate-800 font-semibold">More Features</span>
       </div>
 
-      {/* 2. User Profile Summary Banner */}
-      <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* 2. User Profile Summary Banner (Desktop Only) */}
+      <div className="hidden md:flex bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-xs flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3.5">
           <Avatar user={profile} size={56} className="ring-2 ring-primary/20 shrink-0" />
           <div className="min-w-0">
@@ -307,14 +307,14 @@ export default function More() {
           </span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
           {remainingButtons.map((btn) => {
             const Icon = btn.icon;
             return (
               <Link
                 key={btn.to}
                 to={btn.to}
-                className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-2xs hover:shadow-md hover:border-blue-200 transition-all flex items-center justify-between group active:scale-[0.99]"
+                className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-2xs hover:shadow-md hover:border-blue-200 transition-all flex items-center justify-between group active:scale-[0.99] no-underline"
               >
                 <div className="flex items-center gap-3.5 min-w-0">
                   <div className={`p-3 rounded-xl ${btn.color} shrink-0 group-hover:scale-105 transition-transform`}>
@@ -322,7 +322,7 @@ export default function More() {
                   </div>
                   <div className="min-w-0 pr-2">
                     <div className="flex items-center gap-2">
-                      <h4 className="font-bold text-slate-800 text-sm group-hover:text-primary transition-colors truncate">
+                      <h4 className="font-bold text-slate-800 text-sm group-hover:text-primary transition-colors truncate no-underline">
                         {btn.label}
                       </h4>
                       {btn.badge && (
@@ -331,7 +331,7 @@ export default function More() {
                         </span>
                       )}
                     </div>
-                    <p className="text-xs text-slate-500 mt-0.5 line-clamp-1">
+                    <p className="text-xs text-slate-500 mt-0.5 line-clamp-1 no-underline">
                       {btn.desc}
                     </p>
                   </div>
@@ -354,17 +354,17 @@ export default function More() {
           {/* Profile & Avatar */}
           <Link
             to="/account"
-            className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-2xs hover:shadow-md hover:border-blue-200 transition-all flex items-center justify-between group"
+            className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-2xs hover:shadow-md hover:border-blue-200 transition-all flex items-center justify-between group no-underline"
           >
             <div className="flex items-center gap-3.5">
               <div className="p-3 rounded-xl bg-blue-50 text-primary group-hover:scale-105 transition-transform">
                 <User size={20} />
               </div>
               <div>
-                <h4 className="font-bold text-slate-800 text-sm group-hover:text-primary transition-colors">
+                <h4 className="font-bold text-slate-800 text-sm group-hover:text-primary transition-colors no-underline">
                   My Profile & Avatar
                 </h4>
-                <p className="text-xs text-slate-500 mt-0.5">
+                <p className="text-xs text-slate-500 mt-0.5 no-underline">
                   Update profile photo and review your personal details.
                 </p>
               </div>
@@ -376,17 +376,17 @@ export default function More() {
           <button
             type="button"
             onClick={() => setShowPasswordModal(true)}
-            className="w-full text-left bg-white rounded-2xl p-4 border border-slate-200/80 shadow-2xs hover:shadow-md hover:border-blue-200 transition-all flex items-center justify-between group cursor-pointer"
+            className="w-full text-left bg-white rounded-2xl p-4 border border-slate-200/80 shadow-2xs hover:shadow-md hover:border-blue-200 transition-all flex items-center justify-between group cursor-pointer no-underline"
           >
             <div className="flex items-center gap-3.5">
               <div className="p-3 rounded-xl bg-slate-100 text-slate-700 group-hover:scale-105 transition-transform">
                 <Lock size={20} />
               </div>
               <div>
-                <h4 className="font-bold text-slate-800 text-sm group-hover:text-primary transition-colors">
+                <h4 className="font-bold text-slate-800 text-sm group-hover:text-primary transition-colors no-underline">
                   Security & Password
                 </h4>
-                <p className="text-xs text-slate-500 mt-0.5">
+                <p className="text-xs text-slate-500 mt-0.5 no-underline">
                   Change your password and protect your credentials.
                 </p>
               </div>
@@ -397,17 +397,17 @@ export default function More() {
           {/* Privacy Notice */}
           <Link
             to="/privacy"
-            className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-2xs hover:shadow-md hover:border-blue-200 transition-all flex items-center justify-between group"
+            className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-2xs hover:shadow-md hover:border-blue-200 transition-all flex items-center justify-between group no-underline"
           >
             <div className="flex items-center gap-3.5">
               <div className="p-3 rounded-xl bg-emerald-50 text-emerald-700 group-hover:scale-105 transition-transform">
                 <Shield size={20} />
               </div>
               <div>
-                <h4 className="font-bold text-slate-800 text-sm group-hover:text-primary transition-colors">
+                <h4 className="font-bold text-slate-800 text-sm group-hover:text-primary transition-colors no-underline">
                   Privacy & Geolocation Policy
                 </h4>
-                <p className="text-xs text-slate-500 mt-0.5">
+                <p className="text-xs text-slate-500 mt-0.5 no-underline">
                   Read how student location is securely verified.
                 </p>
               </div>

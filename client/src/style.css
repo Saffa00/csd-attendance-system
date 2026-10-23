@@ -5385,3 +5385,29 @@ button:disabled {
   }
 }
 
+/* ===================================================================
+   Mobile Bottom Sheet (More Menu) Styles (Screens < 768px)
+   =================================================================== */
+@keyframes slideUp200 {
+  from {
+    transform: translateY(100%);
+    opacity: 0.8;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-up-200 {
+  animation: slideUp200 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@media (max-width: 899px) {
+  .dept-hub-wrapper > div:first-child,
+  .more-breadcrumb,
+  .hod-breadcrumb {
+    display: none !important;
+  }
+}
+

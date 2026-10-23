@@ -10,6 +10,7 @@ import { useOnline, useInstallPrompt, Avatar } from './ui';
 import { queueCount, syncQueue } from './offline';
 import ProfileDropdown from './components/ProfileDropdown';
 import GlobalSearchBar from './components/GlobalSearchBar';
+import MoreBottomSheet from './components/MoreBottomSheet';
 
 /** Web Audio 2-tone notification chime (zero latency, no audio file download) */
 function playChime() {
@@ -90,6 +91,7 @@ export default function Shell({ mobileNav = [], sidebarNav = [], nav, titles = {
   const [unread, setUnread] = useState(0);
   const [pendingSync, setPendingSync] = useState(0);
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
+  const [moreSheetOpen, setMoreSheetOpen] = useState(false);
   const [activeToast, setActiveToast] = useState(null);
   const [showPermissionPrompt, setShowPermissionPrompt] = useState(() => {
     return typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'default' && !sessionStorage.getItem('dismissed_notif_prompt');
@@ -99,9 +101,10 @@ export default function Shell({ mobileNav = [], sidebarNav = [], nav, titles = {
   const effectiveMobileNav = mobileNav.length ? mobileNav : (nav || []);
   const title = titles[loc.pathname] || titles[`/${loc.pathname.split('/')[1]}`] || 'CS Portal';
 
-  // Automatically close mobile drawer when navigating
+  // Automatically close mobile drawer and more sheet when navigating
   useEffect(() => {
     setMobileDrawerOpen(false);
+    setMoreSheetOpen(false);
   }, [loc.pathname]);
 
   // Request notification permission handler
@@ -434,18 +437,53 @@ export default function Shell({ mobileNav = [], sidebarNav = [], nav, titles = {
             MOBILE BOTTOM NAVIGATION BAR (Phones & PWA Standalone Mode)
             =================================================================== */}
         <nav className="mobile-bottom-nav" aria-label="Mobile Bottom Navigation">
-          {effectiveMobileNav.map(({ label, icon: Icon, to }) => (
-            <NavLink
-              key={to}
-              to={to}
-              end={to === '/'}
-              className={({ isActive }) => `mobile-nav-item ${isActive ? 'active' : ''}`}
-            >
-              <Icon size={21} />
-              <span>{label}</span>
-            </NavLink>
-          ))}
+          {effectiveMobileNav.map(({ label, icon: Icon, to }) => {
+            const isMore = label === 'More' || to === '/more';
+            if (isMore) {
+              return (
+                <button
+                  key="more-bottom-btn"
+                  type="button"
+                  onClick={(e) => {
+                    if (window.innerWidth < 768) {
+                      e.preventDefault();
+                      setMoreSheetOpen(prev => !prev);
+                    } else {
+                      navigate('/more');
+                    }
+                  }}
+                  className={`mobile-nav-item ${moreSheetOpen || loc.pathname === '/more' ? 'active' : ''}`}
+                  aria-haspopup="dialog"
+                  aria-expanded={moreSheetOpen}
+                  aria-label="Open More menu"
+                >
+                  <Icon size={21} />
+                  <span>{label}</span>
+                </button>
+              );
+            }
+            return (
+              <NavLink
+                key={to}
+                to={to}
+                end={to === '/'}
+                className={({ isActive }) => `mobile-nav-item ${isActive ? 'active' : ''}`}
+                onClick={() => setMoreSheetOpen(false)}
+              >
+                <Icon size={21} />
+                <span>{label}</span>
+              </NavLink>
+            );
+          })}
         </nav>
+
+        {/* Slide-Up Bottom Sheet on screens < 768px */}
+        <MoreBottomSheet
+          isOpen={moreSheetOpen}
+          onClose={() => setMoreSheetOpen(false)}
+          profile={profile}
+          onSignOut={signOut}
+        />
       </div>
     </div>
   );
