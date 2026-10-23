@@ -4200,7 +4200,104 @@ button:disabled {
   background: #f8fafc;
 }
 
-/* Responsive Overrides */
+/* Mobile Responsive Card List for Recent Attendance Records */
+.hod-records-mobile-list {
+  display: none;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.hod-record-mobile-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-sizing: border-box;
+  transition: all 0.15s ease;
+}
+
+.hod-record-mobile-card:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.hod-record-mobile-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #edf2f7;
+}
+
+.hod-record-mobile-course {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.hod-record-mobile-course strong {
+  font-size: 14px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.hod-record-mobile-level {
+  font-size: 11px;
+  font-weight: 700;
+  color: #2563eb;
+  background: #eff6ff;
+  padding: 2px 7px;
+  border-radius: 6px;
+}
+
+.hod-record-mobile-details {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 12px;
+}
+
+.hod-record-mobile-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.hod-record-label {
+  color: #64748b;
+  font-weight: 500;
+  font-size: 11px;
+}
+
+.hod-record-value {
+  color: #1e293b;
+  font-weight: 600;
+  font-size: 12px;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.hod-record-mobile-footer {
+  padding-top: 4px;
+}
+
+.hod-view-action-btn-mobile {
+  width: 100% !important;
+  justify-content: center !important;
+  padding: 7px 12px !important;
+  font-size: 12px !important;
+  border-radius: 8px !important;
+}
+
+/* Responsive Overrides across all dashboards */
 @media (max-width: 1100px) {
   .hod-metrics-grid {
     grid-template-columns: repeat(2, 1fr);
@@ -4214,21 +4311,175 @@ button:disabled {
 }
 
 @media (max-width: 640px) {
+  .hod-dashboard {
+    gap: 14px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    overflow-x: hidden !important;
+  }
+
+  .hod-dashboard-header {
+    gap: 10px !important;
+  }
+
   .hod-welcome-banner {
-    flex-direction: column;
-    align-items: flex-start;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    padding: 16px 14px !important;
+    border-radius: 14px !important;
+    gap: 12px !important;
   }
+
+  .hod-welcome-title {
+    font-size: 18px !important;
+    line-height: 1.3 !important;
+  }
+
+  .hod-welcome-desc {
+    font-size: 12px !important;
+    line-height: 1.4 !important;
+  }
+
   .hod-header-pills {
-    width: 100%;
+    width: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
   }
+
   .hod-header-pill {
-    flex: 1 1 calc(50% - 6px);
+    width: 100% !important;
+    padding: 8px 12px !important;
+    border-radius: 10px !important;
+    box-sizing: border-box !important;
   }
+
+  /* Stat metrics cards: 2 columns on mobile for high density, 1 col on < 360px */
   .hod-metrics-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
   }
+
+  .hod-metric-card {
+    padding: 12px 10px !important;
+    border-radius: 12px !important;
+    gap: 10px !important;
+    box-sizing: border-box !important;
+  }
+
+  .hod-stat-icon {
+    width: 40px !important;
+    height: 40px !important;
+  }
+
+  .hod-stat-icon svg {
+    width: 20px !important;
+    height: 20px !important;
+  }
+
+  .hod-stat-label {
+    font-size: 11px !important;
+  }
+
+  .hod-stat-value {
+    font-size: 20px !important;
+  }
+
+  .hod-stat-trend {
+    font-size: 10px !important;
+  }
+
+  /* Cards & visual widgets */
+  .hod-visual-cards-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  .hod-card {
+    padding: 14px 12px !important;
+    border-radius: 14px !important;
+    box-sizing: border-box !important;
+  }
+
+  .hod-card-header {
+    margin-bottom: 12px !important;
+  }
+
+  .hod-card-header h3 {
+    font-size: 14px !important;
+  }
+
+  .hod-donut-wrap {
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 14px !important;
+    padding: 6px 0 !important;
+  }
+
+  .hod-donut-legend {
+    width: 100% !important;
+  }
+
+  .hod-course-title {
+    max-width: 140px !important;
+  }
+
+  /* Table vs Mobile Cards */
+  .hod-table-desktop {
+    display: none !important;
+  }
+
+  .hod-records-mobile-list {
+    display: flex !important;
+  }
+
+  /* Quick Actions Grid */
+  .hod-bottom-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
   .hod-quick-actions-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+
+  .hod-action-tile {
+    padding: 12px 14px !important;
+    border-radius: 12px !important;
+    gap: 10px !important;
+  }
+
+  .hod-tile-icon {
+    width: 36px !important;
+    height: 36px !important;
+  }
+
+  .hod-tile-text strong {
+    font-size: 13px !important;
+  }
+
+  .hod-tile-text span {
+    font-size: 11px !important;
+  }
+}
+
+@media (min-width: 641px) {
+  .hod-records-mobile-list {
+    display: none !important;
+  }
+  .hod-table-desktop {
+    display: block !important;
+  }
+}
+
+@media (max-width: 360px) {
+  .hod-metrics-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .main-content-panel {
+    padding: 10px 8px calc(76px + env(safe-area-inset-bottom)) 8px !important;
   }
 }
 

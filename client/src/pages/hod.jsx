@@ -238,54 +238,101 @@ function RecentAttendanceRecordsTable({ records = [], onViewRecord }) {
   }) : fallback;
 
   return (
-    <div className="hod-table-container">
-      <table className="hod-table">
-        <thead>
-          <tr>
-            <th style={{ width: '40px' }}>#</th>
-            <th>Course</th>
-            <th>Lecturer</th>
-            <th>Date</th>
-            <th>Status</th>
-            <th style={{ textAlign: 'right' }}>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map(r => (
-            <tr key={r.id}>
-              <td className="hod-td-num">{r.index}</td>
-              <td>
-                <div className="hod-td-course">
-                  <strong>{r.code}</strong>
-                  <span className="hod-td-level">{r.level}</span>
+    <>
+      {/* Mobile-Friendly Record Cards (shown on screens <= 640px) */}
+      <div className="hod-records-mobile-list">
+        {rows.map(r => (
+          <div key={r.id} className="hod-record-mobile-card">
+            <div className="hod-record-mobile-header">
+              <div className="hod-record-mobile-course">
+                <strong>{r.code}</strong>
+                <span className="hod-record-mobile-level">{r.level}</span>
+              </div>
+              <span className={`hod-status-badge badge-${r.status}`}>
+                {r.status.charAt(0).toUpperCase() + r.status.slice(1)}
+              </span>
+            </div>
+
+            <div className="hod-record-mobile-details">
+              <div className="hod-record-mobile-meta">
+                <span className="hod-record-label">Lecturer</span>
+                <span className="hod-record-value">{r.lecturer}</span>
+              </div>
+              <div className="hod-record-mobile-meta">
+                <span className="hod-record-label">Date & Time</span>
+                <span className="hod-record-value">{r.date} · {r.time}</span>
+              </div>
+              {r.venue && (
+                <div className="hod-record-mobile-meta">
+                  <span className="hod-record-label">Venue</span>
+                  <span className="hod-record-value">{r.venue}</span>
                 </div>
-              </td>
-              <td className="hod-td-lecturer">{r.lecturer}</td>
-              <td>
-                <div className="hod-td-datetime">
-                  <span>{r.date}</span>
-                  <span className="hod-td-time">{r.time}</span>
-                </div>
-              </td>
-              <td>
-                <span className={`hod-status-badge badge-${r.status}`}>
-                  {r.status.charAt(0).toUpperCase() + r.status.slice(1)}
-                </span>
-              </td>
-              <td style={{ textAlign: 'right' }}>
-                <button
-                  type="button"
-                  className="hod-view-action-btn"
-                  onClick={() => onViewRecord(r)}
-                >
-                  <Eye size={13} /> View
-                </button>
-              </td>
+              )}
+            </div>
+
+            <div className="hod-record-mobile-footer">
+              <button
+                type="button"
+                className="hod-view-action-btn hod-view-action-btn-mobile"
+                onClick={() => onViewRecord(r)}
+              >
+                <Eye size={14} /> View Attendance Details
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Desktop & Tablet Table (shown on screens > 640px) */}
+      <div className="hod-table-container hod-table-desktop">
+        <table className="hod-table">
+          <thead>
+            <tr>
+              <th style={{ width: '40px' }}>#</th>
+              <th>Course</th>
+              <th>Lecturer</th>
+              <th>Date</th>
+              <th>Status</th>
+              <th style={{ textAlign: 'right' }}>Actions</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody>
+            {rows.map(r => (
+              <tr key={r.id}>
+                <td className="hod-td-num">{r.index}</td>
+                <td>
+                  <div className="hod-td-course">
+                    <strong>{r.code}</strong>
+                    <span className="hod-td-level">{r.level}</span>
+                  </div>
+                </td>
+                <td className="hod-td-lecturer">{r.lecturer}</td>
+                <td>
+                  <div className="hod-td-datetime">
+                    <span>{r.date}</span>
+                    <span className="hod-td-time">{r.time}</span>
+                  </div>
+                </td>
+                <td>
+                  <span className={`hod-status-badge badge-${r.status}`}>
+                    {r.status.charAt(0).toUpperCase() + r.status.slice(1)}
+                  </span>
+                </td>
+                <td style={{ textAlign: 'right' }}>
+                  <button
+                    type="button"
+                    className="hod-view-action-btn"
+                    onClick={() => onViewRecord(r)}
+                  >
+                    <Eye size={13} /> View
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </>
   );
 }
 

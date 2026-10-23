@@ -399,69 +399,134 @@ export function RepHome() {
               No recent attendance records found for this class.
             </div>
           ) : (
-            <div className="hod-table-container">
-              <table className="hod-table">
-                <thead>
-                  <tr>
-                    <th style={{ width: 40 }}>#</th>
-                    <th>Course</th>
-                    <th>Student</th>
-                    <th>Date & Time</th>
-                    <th>Status</th>
-                    <th style={{ textAlign: 'right' }}>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {d.recent_records.slice(0, 5).map((r, i) => {
-                    const sess = r.class_sessions || {};
-                    const entry = sess.timetable_entries || {};
-                    const student = r.profiles || {};
-                    const course = entry.courses || {};
-                    return (
-                      <tr key={r.id}>
-                        <td>{i + 1}</td>
-                        <td>
+            <>
+              {/* Mobile Card List (shown on screens <= 640px) */}
+              <div className="hod-records-mobile-list">
+                {d.recent_records.slice(0, 5).map((r, i) => {
+                  const sess = r.class_sessions || {};
+                  const entry = sess.timetable_entries || {};
+                  const student = r.profiles || {};
+                  const course = entry.courses || {};
+                  const modalPayload = {
+                    index: i + 1,
+                    code: course.code,
+                    title: course.title,
+                    student: student.full_name,
+                    student_id: student.student_id,
+                    venue: entry.venues?.name,
+                    lecturer: entry.profiles?.full_name,
+                    date: fmtDate(sess.session_date || r.submitted_at),
+                    status: r.status,
+                    note: r.review_note
+                  };
+                  return (
+                    <div key={r.id} className="hod-record-mobile-card">
+                      <div className="hod-record-mobile-header">
+                        <div className="hod-record-mobile-course">
                           <strong>{course.code || 'COMS'}</strong>
-                          <span style={{ display: 'block', fontSize: 11, color: '#64748b' }}>{course.title || 'Module'}</span>
-                        </td>
-                        <td>
-                          <strong>{student.full_name || 'Student'}</strong>
-                          {student.student_id && <span style={{ display: 'block', fontSize: 11, color: '#94a3b8' }}>ID: {student.student_id}</span>}
-                        </td>
-                        <td>
-                          <span>{sess.session_date ? fmtDate(sess.session_date) : fmtDateTime(r.submitted_at)}</span>
-                        </td>
-                        <td>
-                          <span className={`hod-status-badge badge-${r.status || 'approved'}`}>
-                            {STATUS_LABEL[r.status] || r.status}
-                          </span>
-                        </td>
-                        <td style={{ textAlign: 'right' }}>
-                          <button
-                            type="button"
-                            className="hod-action-btn"
-                            onClick={() => setSelectedRecord({
-                              index: i + 1,
-                              code: course.code,
-                              title: course.title,
-                              student: student.full_name,
-                              student_id: student.student_id,
-                              venue: entry.venues?.name,
-                              lecturer: entry.profiles?.full_name,
-                              date: fmtDate(sess.session_date || r.submitted_at),
-                              status: r.status,
-                              note: r.review_note
-                            })}
-                          >
-                            <Eye size={14} />
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+                          <span className="hod-record-mobile-level">{course.title || 'Module'}</span>
+                        </div>
+                        <span className={`hod-status-badge badge-${r.status || 'approved'}`}>
+                          {STATUS_LABEL[r.status] || r.status}
+                        </span>
+                      </div>
+
+                      <div className="hod-record-mobile-details">
+                        <div className="hod-record-mobile-meta">
+                          <span className="hod-record-label">Student</span>
+                          <span className="hod-record-value">{student.full_name || 'Student'} {student.student_id ? `(${student.student_id})` : ''}</span>
+                        </div>
+                        <div className="hod-record-mobile-meta">
+                          <span className="hod-record-label">Date & Time</span>
+                          <span className="hod-record-value">{sess.session_date ? fmtDate(sess.session_date) : fmtDateTime(r.submitted_at)}</span>
+                        </div>
+                        {entry.venues?.name && (
+                          <div className="hod-record-mobile-meta">
+                            <span className="hod-record-label">Venue</span>
+                            <span className="hod-record-value">{entry.venues.name}</span>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="hod-record-mobile-footer">
+                        <button
+                          type="button"
+                          className="hod-view-action-btn hod-view-action-btn-mobile"
+                          onClick={() => setSelectedRecord(modalPayload)}
+                        >
+                          <Eye size={14} /> View Record Details
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Desktop & Tablet Table (shown on screens > 640px) */}
+              <div className="hod-table-container hod-table-desktop">
+                <table className="hod-table">
+                  <thead>
+                    <tr>
+                      <th style={{ width: 40 }}>#</th>
+                      <th>Course</th>
+                      <th>Student</th>
+                      <th>Date & Time</th>
+                      <th>Status</th>
+                      <th style={{ textAlign: 'right' }}>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {d.recent_records.slice(0, 5).map((r, i) => {
+                      const sess = r.class_sessions || {};
+                      const entry = sess.timetable_entries || {};
+                      const student = r.profiles || {};
+                      const course = entry.courses || {};
+                      return (
+                        <tr key={r.id}>
+                          <td>{i + 1}</td>
+                          <td>
+                            <strong>{course.code || 'COMS'}</strong>
+                            <span style={{ display: 'block', fontSize: 11, color: '#64748b' }}>{course.title || 'Module'}</span>
+                          </td>
+                          <td>
+                            <strong>{student.full_name || 'Student'}</strong>
+                            {student.student_id && <span style={{ display: 'block', fontSize: 11, color: '#94a3b8' }}>ID: {student.student_id}</span>}
+                          </td>
+                          <td>
+                            <span>{sess.session_date ? fmtDate(sess.session_date) : fmtDateTime(r.submitted_at)}</span>
+                          </td>
+                          <td>
+                            <span className={`hod-status-badge badge-${r.status || 'approved'}`}>
+                              {STATUS_LABEL[r.status] || r.status}
+                            </span>
+                          </td>
+                          <td style={{ textAlign: 'right' }}>
+                            <button
+                              type="button"
+                              className="hod-action-btn"
+                              onClick={() => setSelectedRecord({
+                                index: i + 1,
+                                code: course.code,
+                                title: course.title,
+                                student: student.full_name,
+                                student_id: student.student_id,
+                                venue: entry.venues?.name,
+                                lecturer: entry.profiles?.full_name,
+                                date: fmtDate(sess.session_date || r.submitted_at),
+                                status: r.status,
+                                note: r.review_note
+                              })}
+                            >
+                              <Eye size={14} />
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </div>
 
