@@ -103,8 +103,8 @@ export const fmtDateTime = d => (d ? `${fmtDate(d)} ${fmtTime(d)}` : '');
 
 export function Modal({ title, onClose, children }) {
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 100, display: 'grid', placeItems: 'center', padding: 16 }}>
-      <div className="panel" style={{ maxWidth: 480, width: '100%', margin: 0, background: '#fff', borderRadius: 12, maxHeight: '90vh', overflowY: 'auto' }}>
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '12px', boxSizing: 'border-box', overflowY: 'auto' }}>
+      <div className="panel" style={{ maxWidth: 480, width: '100%', margin: 'auto', background: '#fff', borderRadius: 16, maxHeight: '90vh', overflowY: 'auto', overflowX: 'hidden', boxSizing: 'border-box' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
           <h3 style={{ margin: 0, fontSize: 16 }}>{title}</h3>
           <button type="button" onClick={onClose} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 20, color: 'var(--muted)', lineHeight: 1 }}>×</button>

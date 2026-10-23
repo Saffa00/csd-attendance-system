@@ -916,6 +916,10 @@ button:disabled {
   justify-content: center;
   padding: 24px 16px calc(24px + env(safe-area-inset-bottom));
   background: radial-gradient(circle at 50% 0%, #e6f0fa 0%, #f3f6fa 65%);
+  width: 100%;
+  max-width: 100vw;
+  box-sizing: border-box;
+  overflow-x: hidden;
 }
 
 .auth-card {
@@ -926,6 +930,8 @@ button:disabled {
   padding: 32px 28px;
   box-shadow: 0 10px 35px rgba(16, 42, 67, 0.08), 0 2px 8px rgba(16, 42, 67, 0.04);
   border: 1px solid rgba(220, 228, 236, 0.8);
+  box-sizing: border-box;
+  overflow-x: hidden;
   transition: max-width 0.2s ease;
 }
 
@@ -942,6 +948,174 @@ button:disabled {
     grid-template-columns: 1fr;
     gap: 12px;
   }
+}
+
+@media (max-width: 480px) {
+  .auth-page {
+    padding: 16px 12px calc(16px + env(safe-area-inset-bottom));
+  }
+  .auth-card {
+    padding: 22px 14px;
+    border-radius: 16px;
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 360px) {
+  .auth-page {
+    padding: 12px 8px calc(12px + env(safe-area-inset-bottom));
+  }
+  .auth-card {
+    padding: 18px 10px;
+    border-radius: 14px;
+  }
+}
+
+/* Two Recovery Options Navigation Grid */
+.recovery-options-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 16px;
+  background: #f1f5f9;
+  padding: 4px;
+  border-radius: 12px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+@media (max-width: 480px) {
+  .recovery-options-grid {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+}
+
+.recovery-option-btn {
+  width: 100%;
+  min-height: 42px;
+  padding: 9px 12px;
+  border-radius: 9px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+  box-sizing: border-box;
+  white-space: normal;
+  text-align: center;
+}
+
+.recovery-option-btn.active {
+  background: #ffffff;
+  color: #0f172a;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Recovery Subtabs Grid (Staff vs Student) */
+.recovery-subtabs-grid {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+@media (max-width: 480px) {
+  .recovery-subtabs-grid {
+    flex-direction: column;
+    gap: 6px;
+  }
+}
+
+.recovery-subtab-btn {
+  flex: 1;
+  width: 100%;
+  min-height: 38px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 650;
+  cursor: pointer;
+  box-sizing: border-box;
+  text-align: center;
+  white-space: normal;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #475569;
+}
+
+.recovery-subtab-btn.active {
+  border: 2px solid #2563eb;
+  background: #eff6ff;
+  color: #1e40af;
+}
+
+/* Recovery Code and Phone Inputs (Font-size 16px, Reduced Letter-Spacing) */
+.recovery-code-input {
+  font-size: 16px !important;
+  letter-spacing: 0.5px !important;
+  font-family: monospace;
+  font-weight: 600;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.recovery-phone-input {
+  font-size: 16px !important;
+  letter-spacing: normal !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+/* Action button row for recovery forms */
+.recovery-actions-row {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 18px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+@media (max-width: 480px) {
+  .recovery-actions-row {
+    flex-direction: column-reverse;
+  }
+  .recovery-actions-row button {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+}
+
+/* Mobile 16px input font size to prevent mobile browser auto-zoom */
+@media (max-width: 640px) {
+  .input-field,
+  .auth-card input,
+  .auth-card select,
+  .auth-card textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* Message wrapping anywhere */
+.error,
+.success,
+.error-text,
+.success-text,
+.credential,
+.auth-subtitle,
+.auth-footer-text {
+  overflow-wrap: anywhere !important;
+  word-break: break-word !important;
 }
 
 /* Centered Logo & Academic Header (Transparent, No Rectangle) */

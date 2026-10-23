@@ -42,19 +42,54 @@ export function ChangePasswordForm({ forced = false, onDone }) {
     }
   };
   return (
-    <form onSubmit={submit} className="space-y-3">
+    <form onSubmit={submit} className="auth-form" style={{ width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}>
       <Field label={forced ? 'Temporary password' : 'Current password'}>
-        <input name="current_password" type="password" value={f.current_password} onChange={set} autoComplete="current-password" required />
+        <input
+          name="current_password"
+          type="password"
+          className="input-field"
+          style={{ fontSize: '16px', width: '100%', boxSizing: 'border-box' }}
+          value={f.current_password}
+          onChange={set}
+          autoComplete="current-password"
+          required
+        />
       </Field>
       <Field label="New password (min. 8 characters)">
-        <input name="new_password" type="password" value={f.new_password} onChange={set} minLength={8} autoComplete="new-password" required />
+        <input
+          name="new_password"
+          type="password"
+          className="input-field"
+          style={{ fontSize: '16px', width: '100%', boxSizing: 'border-box' }}
+          value={f.new_password}
+          onChange={set}
+          minLength={8}
+          autoComplete="new-password"
+          required
+        />
       </Field>
       <Field label="Confirm new password">
-        <input name="confirm" type="password" value={f.confirm} onChange={set} autoComplete="new-password" required />
+        <input
+          name="confirm"
+          type="password"
+          className="input-field"
+          style={{ fontSize: '16px', width: '100%', boxSizing: 'border-box' }}
+          value={f.confirm}
+          onChange={set}
+          autoComplete="new-password"
+          required
+        />
       </Field>
       <ErrorText>{error}</ErrorText>
       <Success>{ok}</Success>
-      <button className="primary w-full" disabled={busy}>{busy ? 'Saving…' : 'Change password'}</button>
+      <button
+        type="submit"
+        className="auth-submit-btn"
+        style={{ width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}
+        disabled={busy}
+      >
+        {busy ? 'Saving…' : 'Set New Password'}
+      </button>
     </form>
   );
 }
@@ -63,13 +98,28 @@ export function ChangePasswordForm({ forced = false, onDone }) {
 export function ForcedPasswordChange() {
   const { reloadProfile, signOut } = useAuth();
   return (
-    <div className="auth-page"><div className="auth-card">
-      <div className="brand-mark">🔒</div>
-      <h1>Choose a new password</h1>
-      <p className="muted">You signed in with a temporary password. Set your own password to continue.</p>
-      <ChangePasswordForm forced onDone={reloadProfile} />
-      <button className="link-button" onClick={signOut}>Sign out</button>
-    </div></div>
+    <div className="auth-page">
+      <div className="auth-card">
+        <div className="auth-logo-wrap">
+          <img
+            src="/logo.png"
+            alt="Milton Margai Technical University"
+            className="auth-university-logo"
+          />
+          <span className="auth-portal-badge">Security Requirement</span>
+          <h1 className="auth-title">Choose a New Password</h1>
+          <p className="auth-subtitle" style={{ overflowWrap: 'anywhere', wordBreak: 'break-word', marginBottom: 16 }}>
+            You signed in with a temporary password. Choose your permanent password to continue.
+          </p>
+        </div>
+        <ChangePasswordForm forced onDone={reloadProfile} />
+        <div style={{ textAlign: 'center', marginTop: 18 }}>
+          <button className="link-button" onClick={signOut} style={{ fontSize: 13, color: '#64748b' }}>
+            Sign out
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
 

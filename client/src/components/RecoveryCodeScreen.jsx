@@ -188,14 +188,14 @@ export default function RecoveryCodeScreen({
           </div>
 
           {/* Prominent Code Card */}
-          <div className="bg-slate-900 rounded-2xl p-4 sm:p-5 border-2 border-dashed border-emerald-500/60 shadow-inner text-center relative group">
+          <div className="bg-slate-900 rounded-2xl p-4 sm:p-5 border-2 border-dashed border-emerald-500/60 shadow-inner text-center relative group w-full max-w-full box-border overflow-hidden">
             <div className="text-[11px] font-bold text-emerald-400 uppercase tracking-wider mb-2">
               Your Personal Single-Use Recovery Code
             </div>
-            <div className="font-mono text-2xl sm:text-3xl font-black text-emerald-300 tracking-[3px] select-all py-1 break-all">
+            <div className="font-mono text-xl sm:text-2xl font-black text-emerald-300 tracking-[1px] sm:tracking-[2px] select-all py-1 break-all" style={{ overflowWrap: 'anywhere' }}>
               {code}
             </div>
-            <div className="text-[11px] text-slate-400 mt-2">
+            <div className="text-[11px] text-slate-400 mt-2" style={{ overflowWrap: 'anywhere' }}>
               Assigned to: <strong className="text-white">{studentName}</strong> {studentId ? `(${studentId})` : ''}
             </div>
           </div>

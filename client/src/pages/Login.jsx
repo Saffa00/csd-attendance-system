@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { User, Lock, Eye, EyeOff, GraduationCap, ArrowRight, ShieldCheck, KeyRound, Sparkles, UserCheck } from 'lucide-react';
+import { User, Lock, Eye, EyeOff, GraduationCap, ArrowRight, ArrowLeft, ShieldCheck, KeyRound, Sparkles, UserCheck } from 'lucide-react';
 import { apiFetch } from '../api';
 import { useAuth } from '../auth';
-import { ErrorText, useAction, Modal, Field, Success } from '../ui';
+import { ErrorText, useAction, Field, Success } from '../ui';
 import RecoveryCodeScreen from '../components/RecoveryCodeScreen';
 
 export default function Login() {
@@ -14,8 +14,8 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const { busy, error, run } = useAction();
 
-  // Forgot password modal state
-  const [forgotModal, setForgotModal] = useState(false);
+  // Forgot password screen state
+  const [showForgot, setShowForgot] = useState(false);
   const [forgotTab, setForgotTab] = useState('code'); // 'code' | 'rep'
   const [forgotIdentity, setForgotIdentity] = useState('');
   const [staffPhone, setStaffPhone] = useState('');
@@ -70,7 +70,7 @@ export default function Login() {
           studentName: res.student_name || 'Student',
           studentId: res.student_id || forgotIdentity.trim()
         });
-        setForgotModal(false);
+        setShowForgot(false);
       } else {
         setForgotMessage('Password reset successfully! You can now sign in.');
       }
@@ -123,7 +123,7 @@ export default function Login() {
         onContinue={() => {
           const prefill = newRecoveryData.studentId || newRecoveryData.studentName || '';
           setNewRecoveryData(null);
-          setForgotModal(false);
+          setShowForgot(false);
           setIdentity(prefill);
           setPassword('');
           setForgotMessage('');
@@ -133,6 +133,255 @@ export default function Login() {
     );
   }
 
+  // FORGOT PASSWORD VIEW - Uses the exact same responsive container as Login
+  if (showForgot) {
+    return (
+      <div className="auth-page">
+        <div className="auth-card">
+          {/* Centered Milton Margai Technical University CS Logo */}
+          <div className="auth-logo-wrap">
+            <img
+              src="/logo.png"
+              alt="Milton Margai Technical University"
+              className="auth-university-logo"
+            />
+            <span className="auth-portal-badge">Account Recovery</span>
+            <h1 className="auth-title">Password Assistance</h1>
+            <p className="auth-subtitle" style={{ overflowWrap: 'anywhere', wordBreak: 'break-word' }}>
+              Choose an option to regain access to your account
+            </p>
+          </div>
+
+          {/* Two Options Navigation Tabs - Stacks vertically on screens under 480px */}
+          <div className="recovery-options-grid">
+            <button
+              type="button"
+              className={`recovery-option-btn ${forgotTab === 'code' ? 'active' : ''}`}
+              onClick={() => { setForgotTab('code'); setForgotError(''); setForgotMessage(''); }}
+            >
+              <KeyRound size={16} />
+              <span>I have my recovery code</span>
+            </button>
+
+            <button
+              type="button"
+              className={`recovery-option-btn ${forgotTab === 'rep' ? 'active' : ''}`}
+              onClick={() => { setForgotTab('rep'); setForgotError(''); setForgotMessage(''); }}
+            >
+              <UserCheck size={16} />
+              <span>Ask Rep or HOD</span>
+            </button>
+          </div>
+
+          {forgotTab === 'code' ? (
+            /* Option 1: Self-Service with Recovery Code (Students only) */
+            <form onSubmit={handleRecoveryCodeSubmit} className="auth-form" style={{ width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}>
+              <div style={{ background: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: 10, padding: '10px 12px', fontSize: 12, color: '#065f46', lineHeight: 1.5, overflowWrap: 'anywhere', wordBreak: 'break-word', boxSizing: 'border-box' }}>
+                <strong>Student Self-Service:</strong> If you forget your password, your recovery code lets you set a new one yourself. Recovery codes are for students only.
+              </div>
+
+              <div className="input-group">
+                <label className="input-label">Student ID, Phone or Full Name</label>
+                <input
+                  type="text"
+                  className="input-field"
+                  style={{ fontSize: '16px', width: '100%', boxSizing: 'border-box' }}
+                  placeholder="e.g. 8000, 23276000000, or Mohamed Kamara"
+                  value={forgotIdentity}
+                  onChange={e => setForgotIdentity(e.target.value)}
+                  required
+                  autoFocus
+                />
+              </div>
+
+              <div className="input-group">
+                <label className="input-label">Your Recovery Code</label>
+                <input
+                  type="text"
+                  className="input-field recovery-code-input"
+                  placeholder="e.g. RC-4A7B-9E2D-3F8K"
+                  value={recoveryCodeInput}
+                  onChange={e => setRecoveryCodeInput(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="input-group">
+                <label className="input-label">New Password (min 8 chars, letters & numbers)</label>
+                <div className="input-wrapper">
+                  <input
+                    type={showNewPassword ? 'text' : 'password'}
+                    className="input-field"
+                    style={{ fontSize: '16px', width: '100%', boxSizing: 'border-box' }}
+                    placeholder="Enter new password"
+                    value={newPassword}
+                    onChange={e => setNewPassword(e.target.value)}
+                    required
+                  />
+                  <button
+                    type="button"
+                    className="password-toggle"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    tabIndex={-1}
+                    aria-label={showNewPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="input-group">
+                <label className="input-label">Confirm New Password</label>
+                <input
+                  type="password"
+                  className="input-field"
+                  style={{ fontSize: '16px', width: '100%', boxSizing: 'border-box' }}
+                  placeholder="Re-enter new password"
+                  value={confirmPassword}
+                  onChange={e => setConfirmPassword(e.target.value)}
+                  required
+                />
+              </div>
+
+              {forgotError && <ErrorText>{forgotError}</ErrorText>}
+              {forgotMessage && <Success>{forgotMessage}</Success>}
+
+              <div className="recovery-actions-row">
+                <button
+                  type="button"
+                  className="secondary"
+                  style={{ minHeight: '44px', width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}
+                  onClick={() => { setShowForgot(false); setForgotError(''); setForgotMessage(''); }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="primary auth-submit-btn"
+                  style={{ width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}
+                  disabled={forgotBusy || !forgotIdentity.trim() || !recoveryCodeInput.trim() || !newPassword}
+                >
+                  {forgotBusy ? 'Resetting…' : 'Reset Password & Get New Code'}
+                </button>
+              </div>
+            </form>
+          ) : (
+            /* Option 2: Ask Class Rep or HOD (Staff: Lecturer/Class Rep vs Student) */
+            <form onSubmit={handleRepForgotSubmit} className="auth-form" style={{ width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}>
+              <div className="recovery-subtabs-grid">
+                <button
+                  type="button"
+                  className={`recovery-subtab-btn ${staffOrStudent === 'staff' ? 'active' : ''}`}
+                  onClick={() => { setStaffOrStudent('staff'); setForgotError(''); setForgotMessage(''); }}
+                >
+                  Staff (Lecturer / Class Rep)
+                </button>
+                <button
+                  type="button"
+                  className={`recovery-subtab-btn ${staffOrStudent === 'student' ? 'active' : ''}`}
+                  onClick={() => { setStaffOrStudent('student'); setForgotError(''); setForgotMessage(''); }}
+                >
+                  Student (Ask Rep / HOD)
+                </button>
+              </div>
+
+              {staffOrStudent === 'staff' ? (
+                <>
+                  <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 8, padding: '10px 12px', fontSize: 12, color: '#334155', lineHeight: 1.5, overflowWrap: 'anywhere', wordBreak: 'break-word', boxSizing: 'border-box' }}>
+                    <strong>Staff Reset:</strong> Lecturers and class representatives request a reset using their <strong>username</strong> and registered <strong>phone number</strong>. Only the HOD can approve this. Recovery codes are for students only.
+                  </div>
+
+                  <div className="input-group">
+                    <label className="input-label">Staff Username</label>
+                    <input
+                      type="text"
+                      className="input-field"
+                      style={{ fontSize: '16px', width: '100%', boxSizing: 'border-box' }}
+                      placeholder="e.g. LEC-0001 or REP-0001"
+                      value={forgotIdentity}
+                      onChange={e => setForgotIdentity(e.target.value)}
+                      autoFocus
+                      required
+                    />
+                  </div>
+
+                  <div className="input-group">
+                    <label className="input-label">Registered Phone Number</label>
+                    <input
+                      type="tel"
+                      className="input-field recovery-phone-input"
+                      placeholder="e.g. +232 76 123456"
+                      value={staffPhone}
+                      onChange={e => setStaffPhone(e.target.value)}
+                      required
+                    />
+                    <small className="input-hint" style={{ overflowWrap: 'anywhere' }}>
+                      Must match phone on file. If changed, visit HOD in person to update it first.
+                    </small>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <p className="muted small" style={{ margin: 0, overflowWrap: 'anywhere', wordBreak: 'break-word' }}>
+                    If you don't have your recovery code, enter your Student ID or Full Name. Your Class Representative or the HOD will issue you a temporary password.
+                  </p>
+
+                  <div className="input-group">
+                    <label className="input-label">Student ID, Phone or Full Name</label>
+                    <input
+                      type="text"
+                      className="input-field"
+                      style={{ fontSize: '16px', width: '100%', boxSizing: 'border-box' }}
+                      placeholder="e.g. 8000, 23276..., or Mohamed Kamara"
+                      value={forgotIdentity}
+                      onChange={e => setForgotIdentity(e.target.value)}
+                      autoFocus
+                      required
+                    />
+                  </div>
+                </>
+              )}
+
+              {forgotError && <ErrorText>{forgotError}</ErrorText>}
+              {forgotMessage && <Success>{forgotMessage}</Success>}
+
+              <div className="recovery-actions-row">
+                <button
+                  type="button"
+                  className="secondary"
+                  style={{ minHeight: '44px', width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}
+                  onClick={() => { setShowForgot(false); setForgotError(''); setForgotMessage(''); }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="primary auth-submit-btn"
+                  style={{ width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}
+                  disabled={forgotBusy || !forgotIdentity.trim() || (staffOrStudent === 'staff' && !staffPhone.trim())}
+                >
+                  {forgotBusy ? 'Submitting…' : staffOrStudent === 'staff' ? 'Submit to HOD' : 'Submit Request'}
+                </button>
+              </div>
+            </form>
+          )}
+
+          <div className="auth-footer" style={{ marginTop: 20, textAlign: 'center' }}>
+            <button
+              type="button"
+              className="auth-link"
+              style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 650, display: 'inline-flex', alignItems: 'center', gap: 6 }}
+              onClick={() => { setShowForgot(false); setForgotError(''); setForgotMessage(''); }}
+            >
+              <ArrowLeft size={15} /> Back to Sign In
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // LOGIN VIEW - Standard responsive container
   return (
     <div className="auth-page">
       <div className="auth-card">
@@ -148,7 +397,7 @@ export default function Login() {
           <p className="auth-subtitle">Computer Science Department Attendance System</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="auth-form">
+        <form onSubmit={handleSubmit} className="auth-form" style={{ width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}>
           <div className="input-group">
             <label className="input-label" htmlFor="identity">Username, Student ID, Phone or Full Name</label>
             <div className="input-wrapper">
@@ -156,6 +405,7 @@ export default function Login() {
                 id="identity"
                 type="text"
                 className="input-field"
+                style={{ fontSize: '16px', width: '100%', boxSizing: 'border-box' }}
                 placeholder="e.g. LEC-0001, REP-0002, 8000, 23280..., or Full Name"
                 value={identity}
                 onChange={e => setIdentity(e.target.value)}
@@ -173,7 +423,7 @@ export default function Login() {
                 type="button"
                 className="auth-link"
                 onClick={() => {
-                  setForgotModal(true);
+                  setShowForgot(true);
                   setForgotTab('code');
                   setForgotMessage('');
                   setForgotError('');
@@ -188,6 +438,7 @@ export default function Login() {
                 id="password"
                 type={showPassword ? 'text' : 'password'}
                 className="input-field"
+                style={{ fontSize: '16px', width: '100%', boxSizing: 'border-box' }}
                 placeholder="Enter your password"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
@@ -208,7 +459,7 @@ export default function Login() {
 
           <ErrorText>{error}</ErrorText>
 
-          <button type="submit" className="auth-submit-btn" disabled={busy === 'login'}>
+          <button type="submit" className="auth-submit-btn" style={{ width: '100%', maxWidth: '100%', boxSizing: 'border-box' }} disabled={busy === 'login'}>
             {busy === 'login' ? (
               <span className="btn-spinner-wrap">
                 <span className="spinner-mini" /> Signing in…
@@ -220,251 +471,13 @@ export default function Login() {
         </form>
 
         <div className="auth-footer">
-          <p className="auth-footer-text">
+          <p className="auth-footer-text" style={{ overflowWrap: 'anywhere' }}>
             New student?{' '}
             <Link to="/register" className="auth-link">
               Create an account
             </Link>
           </p>
         </div>
-
-        {/* Forgot Password Modal with Two Clear Options */}
-        {forgotModal && (
-          <Modal title="Password Assistance & Reset" onClose={() => setForgotModal(false)}>
-            {/* Two Options Navigation Tabs */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginBottom: 16, background: '#f1f5f9', padding: 4, borderRadius: 12 }}>
-              <button
-                type="button"
-                onClick={() => { setForgotTab('code'); setForgotError(''); setForgotMessage(''); }}
-                style={{
-                  padding: '9px 12px',
-                  borderRadius: 9,
-                  fontSize: 12,
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  border: 'none',
-                  background: forgotTab === 'code' ? '#ffffff' : 'transparent',
-                  color: forgotTab === 'code' ? '#0f172a' : '#64748b',
-                  boxShadow: forgotTab === 'code' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 6
-                }}
-              >
-                <KeyRound size={15} color={forgotTab === 'code' ? '#059669' : '#64748b'} />
-                I have my recovery code
-              </button>
-
-              <button
-                type="button"
-                onClick={() => { setForgotTab('rep'); setForgotError(''); setForgotMessage(''); }}
-                style={{
-                  padding: '9px 12px',
-                  borderRadius: 9,
-                  fontSize: 12,
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  border: 'none',
-                  background: forgotTab === 'rep' ? '#ffffff' : 'transparent',
-                  color: forgotTab === 'rep' ? '#0f172a' : '#64748b',
-                  boxShadow: forgotTab === 'rep' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 6
-                }}
-              >
-                <UserCheck size={15} color={forgotTab === 'rep' ? '#2563eb' : '#64748b'} />
-                Ask Rep or HOD
-              </button>
-            </div>
-
-            {forgotTab === 'code' ? (
-              /* Option 1: Self-Service with Recovery Code (Students only) */
-              <form onSubmit={handleRecoveryCodeSubmit}>
-                <div style={{ background: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: 10, padding: '10px 12px', marginBottom: 14, fontSize: 12, color: '#065f46', lineHeight: 1.5 }}>
-                  <strong>Student Self-Service:</strong> If you forget your password, your recovery code lets you set a new one yourself. Recovery codes are for students only.
-                </div>
-
-                <Field label="Student ID, Phone or Full Name">
-                  <input
-                    type="text"
-                    className="input-field"
-                    placeholder="e.g. 8000, 23276000000, or Mohamed Kamara"
-                    value={forgotIdentity}
-                    onChange={e => setForgotIdentity(e.target.value)}
-                    required
-                    autoFocus
-                  />
-                </Field>
-
-                <Field label="Your Recovery Code">
-                  <input
-                    type="text"
-                    className="input-field"
-                    placeholder="e.g. RC-4A7B-9E2D-3F8K"
-                    value={recoveryCodeInput}
-                    onChange={e => setRecoveryCodeInput(e.target.value)}
-                    style={{ fontFamily: 'monospace', letterSpacing: '1px', fontWeight: 650 }}
-                    required
-                  />
-                </Field>
-
-                <Field label="New Password (min 8 chars, letters & numbers)">
-                  <div style={{ position: 'relative' }}>
-                    <input
-                      type={showNewPassword ? 'text' : 'password'}
-                      className="input-field"
-                      placeholder="Enter new password"
-                      value={newPassword}
-                      onChange={e => setNewPassword(e.target.value)}
-                      required
-                    />
-                    <button
-                      type="button"
-                      className="password-toggle"
-                      onClick={() => setShowNewPassword(!showNewPassword)}
-                      tabIndex={-1}
-                      style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8' }}
-                    >
-                      {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                    </button>
-                  </div>
-                </Field>
-
-                <Field label="Confirm New Password">
-                  <input
-                    type="password"
-                    className="input-field"
-                    placeholder="Re-enter new password"
-                    value={confirmPassword}
-                    onChange={e => setConfirmPassword(e.target.value)}
-                    required
-                  />
-                </Field>
-
-                {forgotError && <ErrorText>{forgotError}</ErrorText>}
-                {forgotMessage && <Success>{forgotMessage}</Success>}
-
-                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 16 }}>
-                  <button type="button" className="secondary" onClick={() => setForgotModal(false)}>Cancel</button>
-                  <button
-                    type="submit"
-                    className="primary"
-                    disabled={forgotBusy || !forgotIdentity.trim() || !recoveryCodeInput.trim() || !newPassword}
-                  >
-                    {forgotBusy ? 'Resetting…' : 'Reset Password & Get New Code'}
-                  </button>
-                </div>
-              </form>
-            ) : (
-              /* Option 2: Ask Class Rep or HOD (Staff: Lecturer/Class Rep vs Student) */
-              <form onSubmit={handleRepForgotSubmit}>
-                {/* Account Type Toggle */}
-                <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
-                  <button
-                    type="button"
-                    onClick={() => { setStaffOrStudent('staff'); setForgotError(''); setForgotMessage(''); }}
-                    style={{
-                      flex: 1,
-                      padding: '8px 10px',
-                      borderRadius: 8,
-                      fontSize: 12,
-                      fontWeight: 650,
-                      cursor: 'pointer',
-                      border: staffOrStudent === 'staff' ? '2px solid #2563eb' : '1px solid #cbd5e1',
-                      background: staffOrStudent === 'staff' ? '#eff6ff' : '#ffffff',
-                      color: staffOrStudent === 'staff' ? '#1e40af' : '#475569'
-                    }}
-                  >
-                    Staff (Lecturer / Class Rep)
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => { setStaffOrStudent('student'); setForgotError(''); setForgotMessage(''); }}
-                    style={{
-                      flex: 1,
-                      padding: '8px 10px',
-                      borderRadius: 8,
-                      fontSize: 12,
-                      fontWeight: 650,
-                      cursor: 'pointer',
-                      border: staffOrStudent === 'student' ? '2px solid #2563eb' : '1px solid #cbd5e1',
-                      background: staffOrStudent === 'student' ? '#eff6ff' : '#ffffff',
-                      color: staffOrStudent === 'student' ? '#1e40af' : '#475569'
-                    }}
-                  >
-                    Student (Ask Rep / HOD)
-                  </button>
-                </div>
-
-                {staffOrStudent === 'staff' ? (
-                  <>
-                    <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 8, padding: '10px 12px', marginBottom: 14, fontSize: 12, color: '#334155', lineHeight: 1.5 }}>
-                      <strong>Staff Reset:</strong> Lecturers and class representatives request a reset using their <strong>username</strong> and registered <strong>phone number</strong>. Only the HOD can approve this. Recovery codes are for students only.
-                    </div>
-
-                    <Field label="Staff Username">
-                      <input
-                        type="text"
-                        className="input-field"
-                        placeholder="e.g. LEC-0001 or REP-0001"
-                        value={forgotIdentity}
-                        onChange={e => setForgotIdentity(e.target.value)}
-                        autoFocus
-                        required
-                      />
-                    </Field>
-
-                    <Field label="Registered Phone Number" hint="Must match phone on file. If changed, visit HOD in person to update it first.">
-                      <input
-                        type="tel"
-                        className="input-field"
-                        placeholder="e.g. +232 76 123456"
-                        value={staffPhone}
-                        onChange={e => setStaffPhone(e.target.value)}
-                        required
-                      />
-                    </Field>
-                  </>
-                ) : (
-                  <>
-                    <p className="muted small" style={{ marginBottom: 14 }}>
-                      If you don't have your recovery code, enter your Student ID or Full Name. Your Class Representative or the HOD will issue you a temporary password.
-                    </p>
-
-                    <Field label="Student ID, Phone or Full Name">
-                      <input
-                        type="text"
-                        className="input-field"
-                        placeholder="e.g. 8000, 23276..., or Mohamed Kamara"
-                        value={forgotIdentity}
-                        onChange={e => setForgotIdentity(e.target.value)}
-                        autoFocus
-                        required
-                      />
-                    </Field>
-                  </>
-                )}
-
-                {forgotError && <ErrorText>{forgotError}</ErrorText>}
-                {forgotMessage && <Success>{forgotMessage}</Success>}
-
-                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 16 }}>
-                  <button type="button" className="secondary" onClick={() => setForgotModal(false)}>Close</button>
-                  <button
-                    type="submit"
-                    className="primary"
-                    disabled={forgotBusy || !forgotIdentity.trim() || (staffOrStudent === 'staff' && !staffPhone.trim())}
-                  >
-                    {forgotBusy ? 'Submitting…' : staffOrStudent === 'staff' ? 'Submit to HOD' : 'Submit Request'}
-                  </button>
-                </div>
-              </form>
-            )}
-          </Modal>
-        )}
       </div>
     </div>
   );
