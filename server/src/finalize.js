@@ -326,6 +326,7 @@ export async function runSessionRemindersJob() {
             console.warn('Reminder flag update warning:', e.message);
           }
         }
+      }
     }
   } catch (err) {
     console.error('Error running 5-min start reminders:', err.message);

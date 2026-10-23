@@ -145,148 +145,175 @@ const registerSchema = z.object({
 });
 
 router.post('/auth/register', registerLimit, async (req, res) => {
-  const parsed = registerSchema.safeParse(req.body);
-  if (!parsed.success) return res.status(400).json({ error: 'Please check the form: ' + parsed.error.issues.map(i => i.path[0]).join(', ') });
-  const b = parsed.data;
-
-  // Enforce both letters and numbers in password
-  if (!/[a-zA-Z]/.test(b.password) || !/\d/.test(b.password)) {
-    return res.status(400).json({ error: 'Password must contain both letters and numbers.' });
-  }
-
-  // Restrict programme levels: Degree (1-4), Diploma (1-2), HND (1-3)
-  const maxLevels = { Degree: 4, Diploma: 2, HND: 3, 'Computer Science': 4, BIT: 4, 'Software Engineering': 4 };
-  const maxAllowed = maxLevels[b.programme] || 4;
-  if (b.level < 1 || b.level > maxAllowed) {
-    return res.status(400).json({ error: `${b.programme} is restricted to Year 1 to ${maxAllowed}.` });
-  }
-
-  let phone;
-  try { phone = normalisePhone(b.phone_number); } catch (e) { return res.status(400).json({ error: e.message }); }
-
-  const studentId = b.student_id ? b.student_id.toUpperCase() : null;
-  if (studentId && (!/^[A-Z0-9][A-Z0-9/._-]{2,29}$/.test(studentId) || RESERVED_ID.test(studentId)))
-    return res.status(400).json({ error: 'Enter a valid student ID' });
-
-  // Duplicate checks (parameterised queries only)
-  if (studentId) {
-    const { data } = await admin.from('profiles').select('id').eq('student_id', studentId).limit(1);
-    if (data?.length) return res.status(409).json({ error: 'This student ID is already registered' });
-  }
-  const { data: phoneUsed } = await admin.from('profiles').select('id').eq('phone_number', phone).limit(1);
-  if (phoneUsed?.length) return res.status(409).json({ error: 'This phone number is already registered' });
-
-  // No student ID => login is name + password, so the same name may not reuse a password.
-  if (!studentId && await passwordCollides(normaliseName(b.full_name), b.password))
-    return res.status(409).json({ error: 'Please choose a different password.' });
-
-  // Auto-approval: student ID found on the HOD's uploaded list
-  let listed = null;
-  if (studentId) {
-    const { data } = await admin.from('student_list').select('*').eq('student_id', studentId).eq('is_claimed', false).maybeSingle();
-    listed = data;
-  }
-
-  const { year, semester } = await currentPeriod();
-  const yearName = year?.name ? year.name.replace(/\s*academic\s*year/i, '').trim() : '2026/2027';
-  const semNum = Number(b.semester) || 1;
-  const semName = semNum === 2 ? 'Second Semester' : 'First Semester';
-
-  const recoveryCode = generateRecoveryCode();
-  const recoveryHash = hashRecoveryCode(recoveryCode);
-
-  const email = `s-${randomToken(5)}@dept.app`;                // hidden internal auth email
-  const { data: authData, error: authError } = await admin.auth.admin.createUser({
-    email,
-    password: b.password,
-    email_confirm: true,
-    user_metadata: {
-      semester: semNum,
-      semester_name: semName,
-      level: b.level,
-      programme: b.programme,
-      academic_year_id: year?.id || null,
-      academic_year: yearName,
-      recovery_code_hash: recoveryHash
-    }
-  });
-  if (authError) return res.status(400).json({ error: 'Could not create the account. Try again.' });
-
-  const { data: profile, error } = await admin.from('profiles').insert({
-    auth_user_id: authData.user.id,
-    role: 'student',
-    full_name: b.full_name,
-    email,
-    phone_number: phone,
-    student_id: studentId,
-    department: 'Computer Science',
-    programme: listed?.programme || b.programme,
-    level: listed?.level || b.level,
-    academic_year_id: year?.id || null,
-    account_status: 'approved',
-    is_active: true,
-    recovery_code_hash: recoveryHash,
-    approved_at: new Date().toISOString()
-  }).select('*').single();
-  if (error) {
-    await admin.auth.admin.deleteUser(authData.user.id);
-    const dup = error.code === '23505';
-    return res.status(dup ? 409 : 400).json({ error: dup ? 'This student ID or phone number is already registered' : 'Could not create the account' });
-  }
-
-  // Ensure recovery_code_hash is set if schema had older default
-  if (!profile.recovery_code_hash) {
-    try {
-      await admin.from('profiles').update({ recovery_code_hash: recoveryHash }).eq('id', profile.id);
-    } catch (e) {
-      console.warn('Fallback recovery_code_hash update warning:', e.message);
-    }
-  }
-
-  // Optional profile picture uploaded during registration
-  if (b.avatar_image && typeof b.avatar_image === 'string') {
-    try {
-      const match = b.avatar_image.match(/^data:(image\/(jpeg|jpg|png|webp));base64,(.+)$/i);
-      const mimeType = match ? (match[1].toLowerCase() === 'image/jpg' ? 'image/jpeg' : match[1].toLowerCase()) : 'image/jpeg';
-      const buffer = match ? Buffer.from(match[3], 'base64') : Buffer.from(b.avatar_image, 'base64');
-      if (buffer.length <= 5 * 1024 * 1024) {
-        const fileName = `${profile.id}.jpg`;
-        await admin.storage.from('avatars').upload(fileName, buffer, { contentType: mimeType, upsert: true });
-        const { data: pubData } = admin.storage.from('avatars').getPublicUrl(fileName);
-        const avatarUrl = `${pubData.publicUrl}?t=${Date.now()}`;
-        await admin.auth.admin.updateUserById(authData.user.id, { user_metadata: { avatar_url: avatarUrl } });
-        try {
-          await admin.from('profiles').update({ avatar_url: avatarUrl }).eq('id', profile.id);
-        } catch {}
-      }
-    } catch (e) {
-      console.warn('Registration avatar upload warning:', e.message);
-    }
-  }
-
   try {
-    if (listed) {
-      await admin.from('student_list').update({ is_claimed: true, claimed_by: profile.id }).eq('id', listed.id);
-      await registerCoursesFor(profile);
-    } else {
-      // Tell the class rep(s) of this level, and the HOD, that a registration needs review
-      const { data: reps } = await admin.from('class_reps').select('rep_id').eq('level', profile.level).eq('programme', profile.programme);
-      const { data: hods } = await admin.from('profiles').select('id').eq('role', 'hod').eq('is_active', true);
-      await notify([...(reps || []).map(r => r.rep_id), ...(hods || []).map(h => h.id)],
-        'New student registration', `${profile.full_name} (Level ${profile.level}) is waiting for approval.`);
-    }
-    await audit(profile.id, 'profile', profile.id, listed ? 'student_registered_auto_approved' : 'student_registered');
-  } catch (postRegErr) {
-    console.warn('Post-registration notification/audit warning:', postRegErr.message);
-  }
+    const parsed = registerSchema.safeParse(req.body);
+    if (!parsed.success) return res.status(400).json({ error: 'Please check the form: ' + parsed.error.issues.map(i => i.path[0]).join(', ') });
+    const b = parsed.data;
 
-  res.status(201).json({
-    status: profile.account_status,
-    message: 'Registration complete and approved. Save your recovery code below.',
-    recovery_code: recoveryCode,
-    student_name: profile.full_name,
-    student_id: profile.student_id || profile.phone_number
-  });
+    // Enforce both letters and numbers in password
+    if (!/[a-zA-Z]/.test(b.password) || !/\d/.test(b.password)) {
+      return res.status(400).json({ error: 'Password must contain both letters and numbers.' });
+    }
+
+    // Restrict programme levels: Degree (1-4), Diploma (1-2), HND (1-3)
+    const maxLevels = { Degree: 4, Diploma: 2, HND: 3, 'Computer Science': 4, BIT: 4, 'Software Engineering': 4 };
+    const maxAllowed = maxLevels[b.programme] || 4;
+    if (b.level < 1 || b.level > maxAllowed) {
+      return res.status(400).json({ error: `${b.programme} is restricted to Year 1 to ${maxAllowed}.` });
+    }
+
+    let phone;
+    try { phone = normalisePhone(b.phone_number); } catch (e) { return res.status(400).json({ error: e.message }); }
+
+    const studentId = b.student_id ? b.student_id.toUpperCase() : null;
+    if (studentId && (!/^[A-Z0-9][A-Z0-9/._-]{2,29}$/.test(studentId) || RESERVED_ID.test(studentId)))
+      return res.status(400).json({ error: 'Enter a valid student ID' });
+
+    // Duplicate checks (parameterised queries only)
+    if (studentId) {
+      const { data } = await admin.from('profiles').select('id').eq('student_id', studentId).limit(1);
+      if (data?.length) return res.status(409).json({ error: 'This student ID is already registered' });
+    }
+    const { data: phoneUsed } = await admin.from('profiles').select('id').eq('phone_number', phone).limit(1);
+    if (phoneUsed?.length) return res.status(409).json({ error: 'This phone number is already registered' });
+
+    // No student ID => login is name + password, so the same name may not reuse a password.
+    if (!studentId && await passwordCollides(normaliseName(b.full_name), b.password))
+      return res.status(409).json({ error: 'Please choose a different password.' });
+
+    // Auto-approval: student ID found on the HOD's uploaded list
+    let listed = null;
+    if (studentId) {
+      try {
+        const { data } = await admin.from('student_list').select('*').eq('student_id', studentId).eq('is_claimed', false).maybeSingle();
+        listed = data;
+      } catch (listErr) {
+        console.warn('Student list check warning:', listErr.message);
+      }
+    }
+
+    let year = null, semester = null;
+    try {
+      const period = await currentPeriod();
+      year = period.year;
+      semester = period.semester;
+    } catch (perErr) {
+      console.warn('Current period lookup warning:', perErr.message);
+    }
+    const yearName = year?.name ? year.name.replace(/\s*academic\s*year/i, '').trim() : '2026/2027';
+    const semNum = Number(b.semester) || 1;
+    const semName = semNum === 2 ? 'Second Semester' : 'First Semester';
+
+    const recoveryCode = generateRecoveryCode();
+    const recoveryHash = hashRecoveryCode(recoveryCode);
+
+    const email = `s-${randomToken(5)}@dept.app`;                // hidden internal auth email
+    const { data: authData, error: authError } = await admin.auth.admin.createUser({
+      email,
+      password: b.password,
+      email_confirm: true,
+      user_metadata: {
+        semester: semNum,
+        semester_name: semName,
+        level: b.level,
+        programme: b.programme,
+        academic_year_id: year?.id || null,
+        academic_year: yearName,
+        recovery_code_hash: recoveryHash
+      }
+    });
+    if (authError || !authData?.user) {
+      console.error('Supabase createUser error:', authError?.message);
+      return res.status(400).json({ error: authError?.message || 'Could not create the account. Try again.' });
+    }
+
+    const { data: profile, error } = await admin.from('profiles').insert({
+      auth_user_id: authData.user.id,
+      role: 'student',
+      full_name: b.full_name,
+      email,
+      phone_number: phone,
+      student_id: studentId,
+      department: 'Computer Science',
+      programme: listed?.programme || b.programme,
+      level: listed?.level || b.level,
+      academic_year_id: year?.id || null,
+      account_status: 'approved',
+      is_active: true,
+      recovery_code_hash: recoveryHash,
+      approved_at: new Date().toISOString()
+    }).select('*').single();
+
+    if (error || !profile) {
+      console.error('Profile insert error:', error?.message);
+      try {
+        await admin.auth.admin.deleteUser(authData.user.id);
+      } catch (delErr) {
+        console.warn('Auth user rollback delete error:', delErr.message);
+      }
+      const dup = error?.code === '23505';
+      return res.status(dup ? 409 : 400).json({
+        error: dup ? 'This student ID or phone number is already registered' : (error?.message || 'Could not create the profile')
+      });
+    }
+
+    // Ensure recovery_code_hash is set if schema had older default
+    if (!profile.recovery_code_hash) {
+      try {
+        await admin.from('profiles').update({ recovery_code_hash: recoveryHash }).eq('id', profile.id);
+      } catch (e) {
+        console.warn('Fallback recovery_code_hash update warning:', e.message);
+      }
+    }
+
+    // Optional profile picture uploaded during registration
+    if (b.avatar_image && typeof b.avatar_image === 'string') {
+      try {
+        const match = b.avatar_image.match(/^data:(image\/(jpeg|jpg|png|webp));base64,(.+)$/i);
+        const mimeType = match ? (match[1].toLowerCase() === 'image/jpg' ? 'image/jpeg' : match[1].toLowerCase()) : 'image/jpeg';
+        const buffer = match ? Buffer.from(match[3], 'base64') : Buffer.from(b.avatar_image, 'base64');
+        if (buffer.length <= 5 * 1024 * 1024) {
+          const fileName = `${profile.id}.jpg`;
+          await admin.storage.from('avatars').upload(fileName, buffer, { contentType: mimeType, upsert: true });
+          const { data: pubData } = admin.storage.from('avatars').getPublicUrl(fileName);
+          const avatarUrl = `${pubData.publicUrl}?t=${Date.now()}`;
+          await admin.auth.admin.updateUserById(authData.user.id, { user_metadata: { avatar_url: avatarUrl } });
+          try {
+            await admin.from('profiles').update({ avatar_url: avatarUrl }).eq('id', profile.id);
+          } catch {}
+        }
+      } catch (e) {
+        console.warn('Registration avatar upload warning:', e.message);
+      }
+    }
+
+    try {
+      if (listed) {
+        await admin.from('student_list').update({ is_claimed: true, claimed_by: profile.id }).eq('id', listed.id);
+        await registerCoursesFor(profile);
+      } else {
+        // Tell the class rep(s) of this level, and the HOD, that a registration needs review
+        const { data: reps } = await admin.from('class_reps').select('rep_id').eq('level', profile.level).eq('programme', profile.programme);
+        const { data: hods } = await admin.from('profiles').select('id').eq('role', 'hod').eq('is_active', true);
+        await notify([...(reps || []).map(r => r.rep_id), ...(hods || []).map(h => h.id)],
+          'New student registration', `${profile.full_name} (Level ${profile.level}) is waiting for approval.`);
+      }
+      await audit(profile.id, 'profile', profile.id, listed ? 'student_registered_auto_approved' : 'student_registered');
+    } catch (postRegErr) {
+      console.warn('Post-registration notification/audit warning:', postRegErr.message);
+    }
+
+    res.status(201).json({
+      status: profile.account_status,
+      message: 'Registration complete and approved. Save your recovery code below.',
+      recovery_code: recoveryCode,
+      student_name: profile.full_name,
+      student_id: profile.student_id || profile.phone_number
+    });
+  } catch (err) {
+    console.error('Registration unhandled error:', err);
+    res.status(500).json({ error: err.message || 'Registration failed. Please try again.' });
+  }
 });
 
 // ------------------------------------------------------------------ SESSION / PASSWORD
@@ -370,6 +397,7 @@ router.post('/auth/forgot-password', async (req, res) => {
         return res.status(400).json({
           error: 'Staff members must request a password reset with their username and registered phone number for HOD approval.'
         });
+      }
       try {
         await admin.auth.resetPasswordForEmail(p.email);
       } catch (e) {
