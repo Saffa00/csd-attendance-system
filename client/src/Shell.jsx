@@ -84,6 +84,7 @@ const ROLE_LABELS = {
 export default function Shell({ mobileNav = [], sidebarNav = [], nav, titles = {}, children }) {
   const { profile, signOut } = useAuth();
   const online = useOnline();
+  const { canInstall, install } = useInstallPrompt();
   const loc = useLocation();
   const navigate = useNavigate();
   const [unread, setUnread] = useState(0);
