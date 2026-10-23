@@ -352,18 +352,20 @@ svg.lucide, .lucide { display: inline-block; vertical-align: middle; }
   min-width: 0;
 }
 .header-menu-toggle {
-  background: none;
-  border: none;
-  color: var(--text);
-  padding: 6px;
-  border-radius: 8px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: none !important;
 }
-.header-menu-toggle:hover {
-  background: #f1f5f9;
+.header-mobile-logo {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  object-fit: contain;
+  flex-shrink: 0;
+  display: inline-block;
+}
+@media (min-width: 900px) {
+  .header-mobile-logo {
+    display: none !important;
+  }
 }
 .main-header-title-box {
   display: flex;
@@ -894,11 +896,15 @@ button:disabled {
   right: 0;
   z-index: 50;
   display: flex;
+  align-items: center;
   justify-content: space-around;
-  background: white;
+  background: #ffffff;
   border-top: 1px solid #e2e8f0;
-  padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
+  padding: 6px 2px calc(6px + env(safe-area-inset-bottom));
   box-shadow: 0 -2px 14px rgba(16, 42, 67, 0.08);
+  width: 100%;
+  max-width: 100vw;
+  box-sizing: border-box;
 }
 .mobile-nav-item,
 .bottom-nav a {
@@ -908,14 +914,29 @@ button:disabled {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 3px;
+  justify-content: center;
+  gap: 2px;
   font-size: 10px;
   font-weight: 600;
   text-decoration: none;
-  min-width: 54px;
-  padding: 5px 4px;
+  flex: 1;
+  max-width: 20%;
+  min-width: 0;
+  padding: 5px 2px;
   border-radius: 8px;
   transition: all 0.15s;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.mobile-nav-item span,
+.bottom-nav a span {
+  font-size: 10px;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  text-align: center;
 }
 .mobile-nav-item.active,
 .bottom-nav a.active {
@@ -1558,7 +1579,7 @@ button:disabled {
     padding-bottom: calc(72px + env(safe-area-inset-bottom));
   }
   .header-menu-toggle {
-    display: inline-flex !important;
+    display: none !important;
   }
   .sidebar-close-btn {
     display: flex !important;
@@ -1620,6 +1641,25 @@ button:disabled {
 /* ===================================================================
    Avatar & Profile Picture Styles
    =================================================================== */
+/* Circular Avatar Rules */
+.app-avatar,
+.sidebar-avatar,
+.account-main-avatar {
+  border-radius: 50% !important;
+  aspect-ratio: 1 / 1 !important;
+  object-fit: cover !important;
+  object-position: center 25% !important;
+  overflow: hidden !important;
+  display: block;
+  flex-shrink: 0 !important;
+}
+.app-avatar-initials {
+  border-radius: 50% !important;
+  aspect-ratio: 1 / 1 !important;
+  overflow: hidden !important;
+  flex-shrink: 0 !important;
+}
+
 .avatar-button {
   padding: 2px;
   border-radius: 50%;

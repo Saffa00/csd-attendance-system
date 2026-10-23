@@ -40,28 +40,28 @@ const NAV_CONFIG = {
     { label: 'Home', icon: Home, to: '/' },
     { label: 'Timetable', icon: CalendarDays, to: '/timetable' },
     { label: 'Attendance', icon: ClipboardCheck, to: '/attendance' },
-    { label: 'Notices', icon: Megaphone, to: '/announcements' },
+    { label: 'Modules', icon: BookOpen, to: '/registered-modules' },
     { label: 'More', icon: MoreHorizontal, to: '/more' }
   ],
   lecturer: [
     { label: 'Home', icon: Home, to: '/' },
     { label: 'Sessions', icon: CalendarDays, to: '/sessions' },
     { label: 'Approvals', icon: ClipboardCheck, to: '/approvals' },
-    { label: 'Notices', icon: Megaphone, to: '/announcements' },
+    { label: 'Modules', icon: BookOpen, to: '/courses' },
     { label: 'More', icon: MoreHorizontal, to: '/more' }
   ],
   class_rep: [
     { label: 'Home', icon: Home, to: '/' },
     { label: 'Timetable', icon: CalendarDays, to: '/timetable' },
     { label: 'Students', icon: Users, to: '/students' },
-    { label: 'Notices', icon: Megaphone, to: '/announcements' },
+    { label: 'Modules', icon: BookOpen, to: '/modules' },
     { label: 'More', icon: MoreHorizontal, to: '/more' }
   ],
   hod: [
     { label: 'Home', icon: Home, to: '/' },
-    { label: 'Notices', icon: Megaphone, to: '/announcements' },
     { label: 'Attendance', icon: ClipboardCheck, to: '/attendance' },
     { label: 'Reports', icon: FileText, to: '/reports' },
+    { label: 'Modules', icon: BookOpen, to: '/modules' },
     { label: 'More', icon: MoreHorizontal, to: '/more' }
   ]
 };
@@ -259,6 +259,7 @@ export default function App() {
             <Route path="/history" element={<StudentHistory />} />
             <Route path="/profile" element={<StudentProfile />} />
             <Route path="/registered-modules" element={<StudentProfile />} />
+            <Route path="/modules" element={<StudentProfile />} />
           </>
         )}
 
@@ -267,6 +268,7 @@ export default function App() {
           <>
             <Route path="/" element={<LecturerHome />} />
             <Route path="/courses" element={<LecturerCourses />} />
+            <Route path="/modules" element={<LecturerCourses />} />
             <Route path="/sessions" element={<LecturerSessions />} />
             <Route path="/approvals" element={<LecturerApprovals />} />
             <Route path="/reports" element={<LecturerReports />} />
@@ -280,6 +282,9 @@ export default function App() {
             <Route path="/timetable" element={<RepTimetable />} />
             <Route path="/students" element={<RepStudents />} />
             <Route path="/attendance" element={<RepAttendance />} />
+            <Route path="/modules" element={<StudentProfile />} />
+            <Route path="/registered-modules" element={<StudentProfile />} />
+            <Route path="/courses" element={<StudentProfile />} />
             <Route path="/reports" element={<LecturerReports />} />
             <Route path="/profile" element={<Account />} />
           </>

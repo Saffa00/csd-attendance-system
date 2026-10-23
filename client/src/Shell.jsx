@@ -308,22 +308,16 @@ export default function Shell({ mobileNav = [], sidebarNav = [], nav, titles = {
       <div className="main-wrapper">
         {/* Top Header Bar */}
         <header className="main-header">
-          <div className="main-header-left flex items-center gap-3">
-            <button
-              type="button"
-              className="header-menu-toggle"
-              onClick={() => setMobileDrawerOpen(true)}
-              aria-label="Open menu drawer"
-            >
-              <Menu size={22} />
-            </button>
-
-            <div className="main-header-title-box flex">
-              <span className="main-header-portal-tag">
-                MILTON MARGAI CS PORTAL · {ROLE_LABELS[profile.role]?.toUpperCase()}
-              </span>
-              <h1 className="main-header-page-title">{title}</h1>
-            </div>
+          <div className="main-header-left flex items-center gap-2.5 min-w-0">
+            <Link to="/" className="flex items-center gap-2 min-w-0 text-inherit no-underline">
+              <img src="/logo.png" alt="MMTU" className="header-mobile-logo" />
+              <div className="main-header-title-box flex min-w-0">
+                <span className="main-header-portal-tag">
+                  MMTU CS · {ROLE_LABELS[profile.role]?.toUpperCase()}
+                </span>
+                <h1 className="main-header-page-title">{title}</h1>
+              </div>
+            </Link>
 
             {/* Interactive Global Search Bar */}
             <div className="hidden md:block">

@@ -3,425 +3,422 @@ import { Link, useNavigate } from 'react-router-dom';
 import {
   Landmark, Monitor, Calendar, Layers, BookOpen, CheckCircle2,
   Clock, Award, ArrowRight, ChevronRight, Lock, Shield, LogOut,
-  Zap, CalendarDays, ClipboardCheck, History, Bell, User, GraduationCap
+  Zap, CalendarDays, ClipboardCheck, History, Bell, User, GraduationCap,
+  Megaphone, MapPin, Users, ShieldAlert, RefreshCw, Settings, FileText
 } from 'lucide-react';
 import { useAuth } from '../auth';
 import { apiFetch } from '../api';
-import { Modal } from '../ui';
+import { Avatar, Modal } from '../ui';
 import { ChangePasswordForm } from './Account';
+
+const ROLE_LABELS = {
+  hod: 'Head of Department',
+  lecturer: 'Lecturer',
+  class_rep: 'Class Representative',
+  student: 'Student'
+};
 
 export default function More() {
   const { profile, signOut } = useAuth();
   const navigate = useNavigate();
   const [overview, setOverview] = useState(null);
   const [unread, setUnread] = useState(0);
+  const [announcementsCount, setAnnouncementsCount] = useState(0);
   const [showSignOutConfirm, setShowSignOutConfirm] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
 
+  const role = profile?.role === 'rep' ? 'class_rep' : (profile?.role || 'student');
+  const roleLabel = ROLE_LABELS[role] || 'Member';
+
   useEffect(() => {
     // Load student overview if student
-    if (profile?.role === 'student') {
+    if (role === 'student') {
       apiFetch('/student/overview')
         .then(data => setOverview(data))
         .catch(() => {});
     }
-    // Load unread notifications
+    // Load unread notifications count
     apiFetch('/notifications/unread-count')
       .then(r => setUnread(r.count || 0))
       .catch(() => {});
-  }, [profile]);
+    // Load announcements count
+    apiFetch('/announcements')
+      .then(r => setAnnouncementsCount(Array.isArray(r) ? r.length : 0))
+      .catch(() => {});
+  }, [role]);
 
   const academicYear = (overview?.year || profile?.academic_year || '2026/2027').replace(/\s*academic\s*year/i, '').trim();
   const semesterName = overview?.semester || (profile?.semester === 2 ? 'Second Semester' : 'First Semester');
-  const modulesCount = overview?.courses || 5;
-  const attendanceRate = overview?.attendance?.rate ?? 89;
-  const classesAttended = overview?.attendance?.approved ?? 18;
-  const totalClasses = overview?.attendance?.total || 20;
 
   const handleSignOut = async () => {
     setShowSignOutConfirm(false);
     await signOut();
   };
 
+  // Remaining Buttons for HOD
+  const hodButtons = [
+    {
+      to: '/announcements',
+      label: 'Department Notices',
+      desc: 'Publish and review notices, memos, and broadcasts',
+      icon: Megaphone,
+      badge: announcementsCount ? `${announcementsCount} Active` : null,
+      color: 'bg-amber-50 text-amber-600'
+    },
+    {
+      to: '/lecturers',
+      label: 'Lecturers Management',
+      desc: 'View departmental lecturers, active courses, and credentials',
+      icon: Users,
+      color: 'bg-blue-50 text-blue-600'
+    },
+    {
+      to: '/reps',
+      label: 'Class Representatives',
+      desc: 'Manage class reps across programmes and study levels',
+      icon: User,
+      color: 'bg-emerald-50 text-emerald-600'
+    },
+    {
+      to: '/students',
+      label: 'Students Directory',
+      desc: 'Browse student roster, account approvals, and enrollment',
+      icon: Users,
+      color: 'bg-indigo-50 text-indigo-600'
+    },
+    {
+      to: '/venues',
+      label: 'Lecture Halls & Venues',
+      desc: 'Configure lecture halls, GPS coordinates, and geofence radius',
+      icon: MapPin,
+      color: 'bg-purple-50 text-purple-600'
+    },
+    {
+      to: '/students-at-risk',
+      label: 'Students At Risk',
+      desc: 'Identify students below the 75% attendance threshold',
+      icon: ShieldAlert,
+      color: 'bg-rose-50 text-rose-600'
+    },
+    {
+      to: '/rollover',
+      label: 'Academic Year Rollover',
+      desc: 'Advance academic session, promote levels, and rollover terms',
+      icon: RefreshCw,
+      color: 'bg-teal-50 text-teal-600'
+    },
+    {
+      to: '/academic',
+      label: 'Academic Setup & Policies',
+      desc: 'Department terms, semester settings, and minimum attendance %',
+      icon: Settings,
+      color: 'bg-slate-100 text-slate-700'
+    }
+  ];
+
+  // Remaining Buttons for Lecturer
+  const lecturerButtons = [
+    {
+      to: '/announcements',
+      label: 'Department Notices',
+      desc: 'Read departmental announcements, memos, and updates',
+      icon: Megaphone,
+      badge: announcementsCount ? `${announcementsCount} Active` : null,
+      color: 'bg-amber-50 text-amber-600'
+    },
+    {
+      to: '/students-at-risk',
+      label: 'Students At Risk',
+      desc: 'Monitor students at risk of attendance debarment',
+      icon: ShieldAlert,
+      color: 'bg-rose-50 text-rose-600'
+    },
+    {
+      to: '/venues',
+      label: 'Lecture Halls & GPS',
+      desc: 'Check room locations, campus buildings, and GPS radius',
+      icon: MapPin,
+      color: 'bg-purple-50 text-purple-600'
+    },
+    {
+      to: '/reports',
+      label: 'Reports & Export',
+      desc: 'Export course attendance summaries, spreadsheets, and percentages',
+      icon: FileText,
+      color: 'bg-blue-50 text-blue-600'
+    }
+  ];
+
+  // Remaining Buttons for Class Rep
+  const repButtons = [
+    {
+      to: '/announcements',
+      label: 'Department Notices',
+      desc: 'Department broadcasts, class memos, and official notices',
+      icon: Megaphone,
+      badge: announcementsCount ? `${announcementsCount} Active` : null,
+      color: 'bg-amber-50 text-amber-600'
+    },
+    {
+      to: '/reports',
+      label: 'Class Attendance Reports',
+      desc: 'Download and export attendance records for your class',
+      icon: FileText,
+      color: 'bg-blue-50 text-blue-600'
+    },
+    {
+      to: '/venues',
+      label: 'Class Venues & GPS',
+      desc: 'View assigned lecture halls and GPS coordinates',
+      icon: MapPin,
+      color: 'bg-purple-50 text-purple-600'
+    },
+    {
+      to: '/timetable',
+      label: 'Class Timetable',
+      desc: 'Review weekly lecture schedule and hall allocations',
+      icon: CalendarDays,
+      color: 'bg-emerald-50 text-emerald-600'
+    }
+  ];
+
+  // Remaining Buttons for Student
+  const studentButtons = [
+    {
+      to: '/announcements',
+      label: 'Department Notices',
+      desc: 'Official departmental notices, schedule changes, and memos',
+      icon: Megaphone,
+      badge: announcementsCount ? `${announcementsCount} Active` : null,
+      color: 'bg-amber-50 text-amber-600'
+    },
+    {
+      to: '/history',
+      label: 'Attendance History',
+      desc: 'Complete log of your verified attendance records and sessions',
+      icon: History,
+      color: 'bg-purple-50 text-purple-600'
+    },
+    {
+      to: '/venues',
+      label: 'Lecture Halls & GPS',
+      desc: 'Classroom buildings, halls, and GPS geofence radius',
+      icon: MapPin,
+      color: 'bg-blue-50 text-blue-600'
+    },
+    {
+      to: '/notifications',
+      label: 'Notifications Center',
+      desc: 'Class alerts, attendance reminders, and system updates',
+      icon: Bell,
+      badge: unread > 0 ? `${unread} Unread` : null,
+      color: 'bg-emerald-50 text-emerald-600'
+    },
+    {
+      to: '/timetable',
+      label: 'Weekly Timetable',
+      desc: 'View weekly lecture timetable and room assignments',
+      icon: CalendarDays,
+      color: 'bg-indigo-50 text-indigo-600'
+    }
+  ];
+
+  const remainingButtons = role === 'hod'
+    ? hodButtons
+    : role === 'lecturer'
+    ? lecturerButtons
+    : role === 'class_rep'
+    ? repButtons
+    : studentButtons;
+
   return (
-    <div className="dept-hub-wrapper max-w-7xl mx-auto px-2 sm:px-4 py-4 space-y-6">
+    <div className="dept-hub-wrapper max-w-5xl mx-auto px-2 sm:px-4 py-4 space-y-5">
       {/* 1. Breadcrumbs */}
       <div className="flex items-center gap-2 text-xs text-slate-500 font-medium">
         <Link to="/" className="text-primary hover:underline">Home</Link>
         <span>›</span>
-        <span className="text-slate-800 font-semibold">Department Hub</span>
+        <span className="text-slate-800 font-semibold">More Features</span>
       </div>
 
-      {/* 2. Welcome Header Banner */}
-      <div className="bg-white rounded-2xl p-5 sm:p-6 border border-slate-200/80 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-5">
-        <div className="flex items-center gap-4">
-          <div className="p-3.5 rounded-2xl bg-blue-50 text-primary border border-blue-100 shrink-0">
-            <Landmark size={28} />
-          </div>
-          <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
-              Welcome to Your Department Hub
-            </h1>
-            <p className="text-xs sm:text-sm text-slate-500 mt-1">
-              Access your academic records, manage your modules, attendance and more — all in one place.
+      {/* 2. User Profile Summary Banner */}
+      <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3.5">
+          <Avatar user={profile} size={56} className="ring-2 ring-primary/20 shrink-0" />
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h2 className="text-lg sm:text-xl font-bold text-slate-900 tracking-tight truncate">
+                {profile?.full_name}
+              </h2>
+              <span className={`px-2 py-0.5 rounded-full text-[11px] font-bold ${
+                role === 'hod' ? 'bg-purple-100 text-purple-700' :
+                role === 'lecturer' ? 'bg-blue-100 text-blue-700' :
+                role === 'class_rep' ? 'bg-emerald-100 text-emerald-700' :
+                'bg-slate-100 text-slate-700'
+              }`}>
+                {roleLabel}
+              </span>
+            </div>
+            <p className="text-xs text-slate-500 mt-0.5 truncate">
+              {profile?.student_id ? `Student ID: ${profile.student_id}` : profile?.username || 'Milton Margai CS Department'}
             </p>
           </div>
         </div>
 
-        {/* Top-Right Pills */}
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 border border-slate-200/80 rounded-xl text-xs font-semibold text-slate-700">
-            <Monitor size={15} className="text-primary" />
-            <span>Department: <strong className="text-slate-900">Computer Science</strong></span>
+        {/* Top-Right Department & Term Badges */}
+        <div className="flex flex-wrap items-center gap-2 self-start sm:self-center">
+          <div className="flex items-center gap-1.5 px-3 py-1 bg-slate-50 border border-slate-200/80 rounded-xl text-xs font-semibold text-slate-700">
+            <Calendar size={13} className="text-primary" />
+            <span>{academicYear}</span>
           </div>
 
-          <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 border border-slate-200/80 rounded-xl text-xs font-semibold text-slate-700">
-            <Calendar size={15} className="text-primary" />
-            <span>Academic Year: <strong className="text-slate-900">{academicYear}</strong></span>
-          </div>
-
-          <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 border border-slate-200/80 rounded-xl text-xs font-semibold text-slate-700">
-            <Layers size={15} className="text-primary" />
-            <span>Semester: <strong className="text-slate-900">{semesterName}</strong></span>
+          <div className="flex items-center gap-1.5 px-3 py-1 bg-slate-50 border border-slate-200/80 rounded-xl text-xs font-semibold text-slate-700">
+            <Layers size={13} className="text-primary" />
+            <span>{semesterName}</span>
           </div>
         </div>
       </div>
 
-      {/* 3. Four Metric Stat Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Registered Modules */}
-        <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm flex flex-col justify-between group hover:shadow-md transition">
+      {/* 3. All Remaining Department Buttons & Tools */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between px-1">
           <div>
-            <div className="p-2.5 rounded-xl bg-blue-50 text-primary w-fit mb-3">
-              <BookOpen size={20} />
-            </div>
-            <span className="text-xs text-slate-500 font-medium">Registered Modules</span>
-            <div className="text-2xl font-black text-slate-900 mt-1">{modulesCount}</div>
+            <h3 className="font-bold text-slate-900 text-sm sm:text-base">Department Tools & Features</h3>
+            <p className="text-xs text-slate-500">Access all remaining features and management tools.</p>
           </div>
-          <Link
-            to="/profile"
-            className="text-xs font-semibold text-primary hover:underline inline-flex items-center gap-1 mt-3 group-hover:translate-x-0.5 transition-transform"
-          >
-            <span>View Modules</span>
-            <ArrowRight size={13} />
-          </Link>
+          <span className="text-xs font-bold text-slate-400">
+            {remainingButtons.length} Options
+          </span>
         </div>
 
-        {/* Total Attendance Rate */}
-        <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm flex flex-col justify-between group hover:shadow-md transition">
-          <div>
-            <div className="p-2.5 rounded-xl bg-emerald-50 text-emerald-600 w-fit mb-3">
-              <CalendarDays size={20} />
-            </div>
-            <span className="text-xs text-slate-500 font-medium">Total Attendance Rate</span>
-            <div className="text-2xl font-black text-slate-900 mt-1">{attendanceRate}%</div>
-          </div>
-          <Link
-            to="/attendance"
-            className="text-xs font-semibold text-primary hover:underline inline-flex items-center gap-1 mt-3 group-hover:translate-x-0.5 transition-transform"
-          >
-            <span>View Attendance</span>
-            <ArrowRight size={13} />
-          </Link>
-        </div>
-
-        {/* Classes Attended */}
-        <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm flex flex-col justify-between group hover:shadow-md transition">
-          <div>
-            <div className="p-2.5 rounded-xl bg-purple-50 text-purple-600 w-fit mb-3">
-              <Clock size={20} />
-            </div>
-            <span className="text-xs text-slate-500 font-medium">Classes Attended</span>
-            <div className="text-2xl font-black text-slate-900 mt-1">{classesAttended} / {totalClasses}</div>
-          </div>
-          <Link
-            to="/history"
-            className="text-xs font-semibold text-primary hover:underline inline-flex items-center gap-1 mt-3 group-hover:translate-x-0.5 transition-transform"
-          >
-            <span>View History</span>
-            <ArrowRight size={13} />
-          </Link>
-        </div>
-
-        {/* Current GPA */}
-        <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm flex flex-col justify-between group hover:shadow-md transition">
-          <div>
-            <div className="p-2.5 rounded-xl bg-amber-50 text-amber-600 w-fit mb-3">
-              <GraduationCap size={20} />
-            </div>
-            <span className="text-xs text-slate-500 font-medium">Current GPA</span>
-            <div className="text-2xl font-black text-slate-900 mt-1">3.42</div>
-          </div>
-          <Link
-            to="/venues"
-            className="text-xs font-semibold text-primary hover:underline inline-flex items-center gap-1 mt-3 group-hover:translate-x-0.5 transition-transform"
-          >
-            <span>View GPA</span>
-            <ArrowRight size={13} />
-          </Link>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {remainingButtons.map((btn) => {
+            const Icon = btn.icon;
+            return (
+              <Link
+                key={btn.to}
+                to={btn.to}
+                className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-2xs hover:shadow-md hover:border-blue-200 transition-all flex items-center justify-between group active:scale-[0.99]"
+              >
+                <div className="flex items-center gap-3.5 min-w-0">
+                  <div className={`p-3 rounded-xl ${btn.color} shrink-0 group-hover:scale-105 transition-transform`}>
+                    <Icon size={20} />
+                  </div>
+                  <div className="min-w-0 pr-2">
+                    <div className="flex items-center gap-2">
+                      <h4 className="font-bold text-slate-800 text-sm group-hover:text-primary transition-colors truncate">
+                        {btn.label}
+                      </h4>
+                      {btn.badge && (
+                        <span className="px-1.5 py-0.5 text-[10px] font-bold bg-amber-500 text-white rounded-md shrink-0">
+                          {btn.badge}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-slate-500 mt-0.5 line-clamp-1">
+                      {btn.desc}
+                    </p>
+                  </div>
+                </div>
+                <ChevronRight size={18} className="text-slate-400 group-hover:translate-x-1 group-hover:text-primary transition-all shrink-0 ml-1" />
+              </Link>
+            );
+          })}
         </div>
       </div>
 
-      {/* 4. Main Two-Column Hub Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Left Column (8 cols): Academic Records & Account & Legal */}
-        <div className="lg:col-span-8 space-y-6">
-          {/* Section: Academic Records */}
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <div className="p-1.5 rounded-lg bg-blue-100/60 text-primary">
-                <BookOpen size={16} />
-              </div>
-              <div>
-                <h3 className="font-bold text-slate-900 text-sm">Academic Records</h3>
-                <p className="text-[11px] text-slate-500">View your complete academic information and progress.</p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-              <Link
-                to="/history"
-                className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-sm hover:shadow-md transition-all flex items-center justify-between group"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="p-2.5 rounded-xl bg-blue-50 text-primary group-hover:bg-primary group-hover:text-white transition-colors">
-                    <BookOpen size={18} />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-slate-800 text-sm group-hover:text-primary transition-colors">
-                      Attendance History
-                    </h4>
-                    <p className="text-xs text-slate-500 mt-0.5">
-                      View your complete log of marked attendances.
-                    </p>
-                  </div>
-                </div>
-                <ChevronRight size={16} className="text-slate-400 group-hover:translate-x-1 group-hover:text-primary transition-all shrink-0 ml-2" />
-              </Link>
-
-              <Link
-                to="/profile"
-                className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-sm hover:shadow-md transition-all flex items-center justify-between group"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="p-2.5 rounded-xl bg-blue-50 text-primary group-hover:bg-primary group-hover:text-white transition-colors">
-                    <User size={18} />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-slate-800 text-sm group-hover:text-primary transition-colors">
-                      My Profile & Modules
-                    </h4>
-                    <p className="text-xs text-slate-500 mt-0.5">
-                      Your enrolled modules and student details.
-                    </p>
-                  </div>
-                </div>
-                <ChevronRight size={16} className="text-slate-400 group-hover:translate-x-1 group-hover:text-primary transition-all shrink-0 ml-2" />
-              </Link>
-            </div>
-          </div>
-
-          {/* Section: Account & Legal */}
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <div className="p-1.5 rounded-lg bg-blue-100/60 text-primary">
-                <Shield size={16} />
-              </div>
-              <div>
-                <h3 className="font-bold text-slate-900 text-sm">Account & Legal</h3>
-                <p className="text-[11px] text-slate-500">Manage your account and important information.</p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-              <button
-                type="button"
-                onClick={() => setShowPasswordModal(true)}
-                className="w-full text-left bg-white rounded-2xl p-4 border border-slate-200/80 shadow-sm hover:shadow-md transition-all flex items-center justify-between group"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="p-2.5 rounded-xl bg-slate-100 text-slate-600 group-hover:bg-primary group-hover:text-white transition-colors">
-                    <Lock size={18} />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-slate-800 text-sm group-hover:text-primary transition-colors">
-                      Security & Password
-                    </h4>
-                    <p className="text-xs text-slate-500 mt-0.5">
-                      Change your account password.
-                    </p>
-                  </div>
-                </div>
-                <ChevronRight size={16} className="text-slate-400 group-hover:translate-x-1 group-hover:text-primary transition-all shrink-0 ml-2" />
-              </button>
-
-              <Link
-                to="/privacy"
-                className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-sm hover:shadow-md transition-all flex items-center justify-between group"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="p-2.5 rounded-xl bg-blue-50 text-primary group-hover:bg-primary group-hover:text-white transition-colors">
-                    <Shield size={18} />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-slate-800 text-sm group-hover:text-primary transition-colors">
-                      Privacy Notice & GPS Policy
-                    </h4>
-                    <p className="text-xs text-slate-500 mt-0.5">
-                      Geolocation protection and data retention.
-                    </p>
-                  </div>
-                </div>
-                <ChevronRight size={16} className="text-slate-400 group-hover:translate-x-1 group-hover:text-primary transition-all shrink-0 ml-2" />
-              </Link>
-            </div>
-
-            {/* Sign Out Card */}
-            <button
-              type="button"
-              onClick={() => setShowSignOutConfirm(true)}
-              className="w-full text-left bg-gradient-to-r from-red-50/70 to-red-100/30 rounded-2xl p-4 border border-red-200/80 shadow-sm hover:bg-red-50 hover:shadow-md transition-all flex items-center justify-between group"
-            >
-              <div className="flex items-center gap-3.5">
-                <div className="p-2.5 rounded-xl bg-red-100 text-red-600 group-hover:bg-red-200 transition-colors">
-                  <LogOut size={20} />
-                </div>
-                <div>
-                  <h4 className="font-bold text-red-900 text-sm">
-                    Sign Out
-                  </h4>
-                  <p className="text-xs text-red-700 mt-0.5">
-                    Disconnect your account securely from this device.
-                  </p>
-                </div>
-              </div>
-              <ChevronRight size={18} className="text-red-400 group-hover:translate-x-1 group-hover:text-red-600 transition-all shrink-0 ml-2" />
-            </button>
-          </div>
+      {/* 4. Account & Security Section */}
+      <div className="space-y-3 pt-2">
+        <div className="px-1">
+          <h3 className="font-bold text-slate-900 text-sm sm:text-base">Account & Security</h3>
+          <p className="text-xs text-slate-500">Manage your profile, credentials, and privacy terms.</p>
         </div>
 
-        {/* Right Column (4 cols): Quick Access & Motivation Card */}
-        <div className="lg:col-span-4 space-y-4">
-          {/* Quick Access Card */}
-          <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm">
-            <div className="flex items-center gap-2 mb-4 pb-2 border-b border-slate-100">
-              <Zap size={16} className="text-primary fill-primary" />
-              <h3 className="font-bold text-slate-900 text-sm">Quick Access</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {/* Profile & Avatar */}
+          <Link
+            to="/account"
+            className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-2xs hover:shadow-md hover:border-blue-200 transition-all flex items-center justify-between group"
+          >
+            <div className="flex items-center gap-3.5">
+              <div className="p-3 rounded-xl bg-blue-50 text-primary group-hover:scale-105 transition-transform">
+                <User size={20} />
+              </div>
+              <div>
+                <h4 className="font-bold text-slate-800 text-sm group-hover:text-primary transition-colors">
+                  My Profile & Avatar
+                </h4>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Update profile photo and review your personal details.
+                </p>
+              </div>
             </div>
+            <ChevronRight size={18} className="text-slate-400 group-hover:translate-x-1 group-hover:text-primary transition-all shrink-0 ml-1" />
+          </Link>
 
-            <div className="space-y-1">
-              <Link
-                to="/profile"
-                className="flex items-center justify-between p-2.5 rounded-xl hover:bg-slate-50 transition-colors group"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-blue-50 text-blue-600">
-                    <BookOpen size={16} />
-                  </div>
-                  <div>
-                    <h5 className="font-bold text-xs text-slate-800 group-hover:text-primary transition-colors">
-                      View Registered Modules
-                    </h5>
-                    <span className="text-[11px] text-slate-500">Check your enrolled courses</span>
-                  </div>
-                </div>
-                <ChevronRight size={15} className="text-slate-400 group-hover:translate-x-0.5 group-hover:text-primary transition-all" />
-              </Link>
-
-              <Link
-                to="/attendance"
-                className="flex items-center justify-between p-2.5 rounded-xl hover:bg-slate-50 transition-colors group"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-emerald-50 text-emerald-600">
-                    <ClipboardCheck size={16} />
-                  </div>
-                  <div>
-                    <h5 className="font-bold text-xs text-slate-800 group-hover:text-primary transition-colors">
-                      Mark Attendance
-                    </h5>
-                    <span className="text-[11px] text-slate-500">Submit your attendance</span>
-                  </div>
-                </div>
-                <ChevronRight size={15} className="text-slate-400 group-hover:translate-x-0.5 group-hover:text-primary transition-all" />
-              </Link>
-
-              <Link
-                to="/timetable"
-                className="flex items-center justify-between p-2.5 rounded-xl hover:bg-slate-50 transition-colors group"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-indigo-50 text-indigo-600">
-                    <CalendarDays size={16} />
-                  </div>
-                  <div>
-                    <h5 className="font-bold text-xs text-slate-800 group-hover:text-primary transition-colors">
-                      Today's Timetable
-                    </h5>
-                    <span className="text-[11px] text-slate-500">View your classes for today</span>
-                  </div>
-                </div>
-                <ChevronRight size={15} className="text-slate-400 group-hover:translate-x-0.5 group-hover:text-primary transition-all" />
-              </Link>
-
-              <Link
-                to="/history"
-                className="flex items-center justify-between p-2.5 rounded-xl hover:bg-slate-50 transition-colors group"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-purple-50 text-purple-600">
-                    <History size={16} />
-                  </div>
-                  <div>
-                    <h5 className="font-bold text-xs text-slate-800 group-hover:text-primary transition-colors">
-                      My Attendance
-                    </h5>
-                    <span className="text-[11px] text-slate-500">Check your attendance records</span>
-                  </div>
-                </div>
-                <ChevronRight size={15} className="text-slate-400 group-hover:translate-x-0.5 group-hover:text-primary transition-all" />
-              </Link>
-
-              <Link
-                to="/notifications"
-                className="flex items-center justify-between p-2.5 rounded-xl hover:bg-slate-50 transition-colors group"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-amber-50 text-amber-600 relative">
-                    <Bell size={16} />
-                  </div>
-                  <div>
-                    <h5 className="font-bold text-xs text-slate-800 group-hover:text-primary transition-colors">
-                      View Notifications
-                    </h5>
-                    <span className="text-[11px] text-slate-500">Latest updates and alerts</span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  {unread > 0 && (
-                    <span className="px-1.5 py-0.5 text-[10px] font-bold bg-red-500 text-white rounded-full">
-                      {unread}
-                    </span>
-                  )}
-                  <ChevronRight size={15} className="text-slate-400 group-hover:translate-x-0.5 group-hover:text-primary transition-all" />
-                </div>
-              </Link>
+          {/* Change Password Modal Trigger */}
+          <button
+            type="button"
+            onClick={() => setShowPasswordModal(true)}
+            className="w-full text-left bg-white rounded-2xl p-4 border border-slate-200/80 shadow-2xs hover:shadow-md hover:border-blue-200 transition-all flex items-center justify-between group cursor-pointer"
+          >
+            <div className="flex items-center gap-3.5">
+              <div className="p-3 rounded-xl bg-slate-100 text-slate-700 group-hover:scale-105 transition-transform">
+                <Lock size={20} />
+              </div>
+              <div>
+                <h4 className="font-bold text-slate-800 text-sm group-hover:text-primary transition-colors">
+                  Security & Password
+                </h4>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Change your password and protect your credentials.
+                </p>
+              </div>
             </div>
-          </div>
+            <ChevronRight size={18} className="text-slate-400 group-hover:translate-x-1 group-hover:text-primary transition-all shrink-0 ml-1" />
+          </button>
 
-          {/* Motivational "Keep Going!" Box */}
-          <div className="bg-gradient-to-br from-blue-50/70 to-indigo-50/40 rounded-2xl p-5 border border-blue-100 flex items-center justify-between gap-4">
-            <div>
-              <h4 className="font-bold text-slate-900 text-sm mb-1">Keep Going!</h4>
-              <p className="text-xs text-slate-600 leading-relaxed">
-                Your academic journey is important. Stay consistent, attend your classes and achieve your goals.
-              </p>
-              <div className="w-12 h-0.5 bg-primary rounded-full mt-3"></div>
+          {/* Privacy Notice */}
+          <Link
+            to="/privacy"
+            className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-2xs hover:shadow-md hover:border-blue-200 transition-all flex items-center justify-between group"
+          >
+            <div className="flex items-center gap-3.5">
+              <div className="p-3 rounded-xl bg-emerald-50 text-emerald-700 group-hover:scale-105 transition-transform">
+                <Shield size={20} />
+              </div>
+              <div>
+                <h4 className="font-bold text-slate-800 text-sm group-hover:text-primary transition-colors">
+                  Privacy & Geolocation Policy
+                </h4>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Read how student location is securely verified.
+                </p>
+              </div>
             </div>
-            <div className="w-14 h-14 rounded-2xl bg-white shadow-sm border border-blue-100 flex items-center justify-center shrink-0 text-primary">
-              <GraduationCap size={28} />
+            <ChevronRight size={18} className="text-slate-400 group-hover:translate-x-1 group-hover:text-primary transition-all shrink-0 ml-1" />
+          </Link>
+
+          {/* Sign Out Card */}
+          <button
+            type="button"
+            onClick={() => setShowSignOutConfirm(true)}
+            className="w-full text-left bg-red-50/60 hover:bg-red-50 rounded-2xl p-4 border border-red-200/80 shadow-2xs hover:shadow-md transition-all flex items-center justify-between group cursor-pointer"
+          >
+            <div className="flex items-center gap-3.5">
+              <div className="p-3 rounded-xl bg-red-100 text-red-600 group-hover:scale-105 transition-transform">
+                <LogOut size={20} />
+              </div>
+              <div>
+                <h4 className="font-bold text-red-900 text-sm">
+                  Sign Out of CS Portal
+                </h4>
+                <p className="text-xs text-red-700 mt-0.5">
+                  Disconnect your account securely from this device.
+                </p>
+              </div>
             </div>
-          </div>
+            <ChevronRight size={18} className="text-red-400 group-hover:translate-x-1 group-hover:text-red-600 transition-all shrink-0 ml-1" />
+          </button>
         </div>
       </div>
 
@@ -448,14 +445,14 @@ export default function More() {
             <div className="flex items-center justify-end gap-2.5">
               <button
                 type="button"
-                className="px-4 py-2 text-sm font-semibold text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition-colors"
+                className="px-4 py-2 text-sm font-semibold text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
                 onClick={() => setShowSignOutConfirm(false)}
               >
                 Cancel
               </button>
               <button
                 type="button"
-                className="px-4 py-2 text-sm font-semibold text-white bg-red-600 hover:bg-red-700 rounded-xl transition-colors shadow-sm flex items-center gap-1.5"
+                className="px-4 py-2 text-sm font-semibold text-white bg-red-600 hover:bg-red-700 rounded-xl transition-colors shadow-sm flex items-center gap-1.5 cursor-pointer"
                 onClick={handleSignOut}
               >
                 <LogOut size={15} /> Yes, Sign Out

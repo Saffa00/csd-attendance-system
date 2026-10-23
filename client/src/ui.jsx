@@ -143,12 +143,19 @@ export function Avatar({ user, size = 40, className = '', style = {} }) {
         style={{
           width: size,
           height: size,
+          minWidth: size,
+          minHeight: size,
+          maxWidth: size,
+          maxHeight: size,
+          aspectRatio: '1 / 1',
           borderRadius: '50%',
           objectFit: 'cover',
-          display: 'inline-block',
+          objectPosition: 'center 25%',
+          display: 'block',
           flexShrink: 0,
-          border: '2px solid rgba(255, 255, 255, 0.85)',
+          border: '2px solid rgba(255, 255, 255, 0.9)',
           boxShadow: '0 1px 3px rgba(0,0,0,0.12)',
+          overflow: 'hidden',
           ...style
         }}
       />
@@ -161,6 +168,11 @@ export function Avatar({ user, size = 40, className = '', style = {} }) {
       style={{
         width: size,
         height: size,
+        minWidth: size,
+        minHeight: size,
+        maxWidth: size,
+        maxHeight: size,
+        aspectRatio: '1 / 1',
         borderRadius: '50%',
         backgroundColor: bgColor,
         color: '#ffffff',
@@ -170,10 +182,11 @@ export function Avatar({ user, size = 40, className = '', style = {} }) {
         fontWeight: 700,
         fontSize: Math.max(11, Math.round(size * 0.4)),
         letterSpacing: '0.04em',
-        border: '2px solid rgba(255, 255, 255, 0.85)',
+        border: '2px solid rgba(255, 255, 255, 0.9)',
         boxShadow: '0 1px 3px rgba(0,0,0,0.12)',
         userSelect: 'none',
         flexShrink: 0,
+        overflow: 'hidden',
         ...style
       }}
       title={name}

@@ -123,7 +123,7 @@ export function ForcedPasswordChange() {
   );
 }
 
-/** Client-side image crop and resize to 400x400 JPEG */
+/** Client-side image crop and resize to 400x400 JPEG capturing the full picture in a circle */
 function processImage(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -131,15 +131,46 @@ function processImage(file) {
       const img = new Image();
       img.onload = () => {
         const canvas = document.createElement('canvas');
-        const size = Math.min(img.width, img.height);
-        const targetSize = Math.min(size, 400);
+        const targetSize = 400;
         canvas.width = targetSize;
         canvas.height = targetSize;
         const ctx = canvas.getContext('2d');
-        const sx = (img.width - size) / 2;
-        const sy = (img.height - size) / 2;
-        ctx.drawImage(img, sx, sy, size, size, 0, 0, targetSize, targetSize);
-        resolve(canvas.toDataURL('image/jpeg', 0.85));
+
+        // Clean white background
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, targetSize, targetSize);
+
+        const w = img.width;
+        const h = img.height;
+        const aspect = w / h;
+
+        // If aspect ratio is relatively square (between 0.75 and 1.35)
+        // Center-crop with smart top-bias so the person's face/head isn't cut off:
+        if (aspect >= 0.75 && aspect <= 1.35) {
+          const size = Math.min(w, h);
+          const sx = (w - size) / 2;
+          // In portrait, bias 20% from top where the head is
+          const sy = h > w ? Math.max(0, (h - size) * 0.20) : (h - size) / 2;
+          ctx.drawImage(img, sx, sy, size, size, 0, 0, targetSize, targetSize);
+        } else {
+          // For tall portraits or wide photos:
+          // Fit the ENTIRE photo inside the 400x400 circular area so no part of the photo is cropped out!
+          const maxDim = Math.max(w, h);
+          const scale = targetSize / maxDim;
+          const drawW = w * scale;
+          const drawH = h * scale;
+          const dx = (targetSize - drawW) / 2;
+          const dy = (targetSize - drawH) / 2;
+
+          ctx.fillStyle = '#f1f5f9';
+          ctx.beginPath();
+          ctx.arc(targetSize / 2, targetSize / 2, targetSize / 2, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.drawImage(img, 0, 0, w, h, dx, dy, drawW, drawH);
+        }
+
+        resolve(canvas.toDataURL('image/jpeg', 0.90));
       };
       img.onerror = () => reject(new Error('Failed to load image file.'));
       img.src = e.target.result;
@@ -155,6 +186,7 @@ export default function Account() {
   const [pushMsg, setPushMsg] = useState('');
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [showSignOutConfirm, setShowSignOutConfirm] = useState(false);
+  const [showPhotoModal, setShowPhotoModal] = useState(false);
   const [editingField, setEditingField] = useState(null); // 'phone' | 'email' | null
   const [editValue, setEditValue] = useState('');
   const fileInputRef = useRef(null);
@@ -319,11 +351,14 @@ export default function Account() {
       <div className="bg-gradient-to-r from-blue-50/90 via-sky-50/50 to-blue-50/80 rounded-2xl p-6 border border-blue-100/90 shadow-sm relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="flex items-center gap-5 relative z-10">
           {/* Avatar with Camera Overlay */}
-          <div className="relative group">
+          <div className="relative group cursor-pointer" onClick={() => setShowPhotoModal(true)}>
             <Avatar user={profile} size={88} className="ring-4 ring-white shadow-md rounded-full object-cover" />
             <button
               type="button"
-              onClick={() => fileInputRef.current?.click()}
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowPhotoModal(true);
+              }}
               className="absolute bottom-0 right-0 p-2 bg-primary text-white rounded-full shadow-md hover:bg-primary-dark transition-transform hover:scale-110"
               title="Change photo"
             >
@@ -803,6 +838,60 @@ export default function Account() {
               Enter your current password and choose a new, strong password with at least 8 characters.
             </p>
             <ChangePasswordForm onDone={() => setShowPasswordModal(false)} />
+          </div>
+        </Modal>
+      )}
+
+      {/* Photo Options Modal */}
+      {showPhotoModal && (
+        <Modal title="Profile Picture Options" onClose={() => setShowPhotoModal(false)}>
+          <div className="p-2 space-y-3">
+            <div className="flex flex-col items-center justify-center p-3 text-center bg-slate-50 rounded-2xl mb-3">
+              <Avatar user={profile} size={80} className="ring-4 ring-white shadow-md mb-2" />
+              <p className="text-xs text-slate-500">
+                Capture your full photo in a clear circle. Choose a camera selfie or upload an existing picture.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 gap-2.5">
+              <button
+                type="button"
+                className="w-full flex items-center justify-center gap-2.5 px-4 py-3 bg-primary text-white rounded-xl font-semibold text-sm shadow-sm hover:bg-primary-dark transition-colors cursor-pointer"
+                onClick={() => {
+                  setShowPhotoModal(false);
+                  cameraInputRef.current?.click();
+                }}
+              >
+                <Camera size={18} />
+                <span>Take Photo with Camera</span>
+              </button>
+
+              <button
+                type="button"
+                className="w-full flex items-center justify-center gap-2.5 px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl font-semibold text-sm transition-colors cursor-pointer"
+                onClick={() => {
+                  setShowPhotoModal(false);
+                  fileInputRef.current?.click();
+                }}
+              >
+                <Upload size={18} />
+                <span>Choose Photo from Gallery / Files</span>
+              </button>
+
+              {profile?.avatar_url && (
+                <button
+                  type="button"
+                  className="w-full flex items-center justify-center gap-2.5 px-4 py-2.5 text-red-600 hover:bg-red-50 rounded-xl font-semibold text-xs transition-colors cursor-pointer mt-1"
+                  onClick={() => {
+                    setShowPhotoModal(false);
+                    handleRemovePhoto();
+                  }}
+                >
+                  <Trash2 size={16} />
+                  <span>Remove Current Photo</span>
+                </button>
+              )}
+            </div>
           </div>
         </Modal>
       )}
