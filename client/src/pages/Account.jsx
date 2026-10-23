@@ -158,6 +158,7 @@ export default function Account() {
   const [editingField, setEditingField] = useState(null); // 'phone' | 'email' | null
   const [editValue, setEditValue] = useState('');
   const fileInputRef = useRef(null);
+  const cameraInputRef = useRef(null);
   const { busy, error, ok, run, setOk } = useAction();
 
   // Recovery code regeneration state (students)
