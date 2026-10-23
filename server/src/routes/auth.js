@@ -225,6 +225,7 @@ router.post('/auth/register', registerLimit, async (req, res) => {
     academic_year_id: year?.id || null,
     account_status: 'approved',
     is_active: true,
+    recovery_code_hash: recoveryHash,
     approved_at: new Date().toISOString()
   }).select('*').single();
   if (error) {
@@ -233,8 +234,14 @@ router.post('/auth/register', registerLimit, async (req, res) => {
     return res.status(dup ? 409 : 400).json({ error: dup ? 'This student ID or phone number is already registered' : 'Could not create the account' });
   }
 
-  // Dual-store recovery_code_hash in profiles if column exists
-  await admin.from('profiles').update({ recovery_code_hash: recoveryHash }).eq('id', profile.id).catch(() => {});
+  // Ensure recovery_code_hash is set if schema had older default
+  if (!profile.recovery_code_hash) {
+    try {
+      await admin.from('profiles').update({ recovery_code_hash: recoveryHash }).eq('id', profile.id);
+    } catch (e) {
+      console.warn('Fallback recovery_code_hash update warning:', e.message);
+    }
+  }
 
   // Optional profile picture uploaded during registration
   if (b.avatar_image && typeof b.avatar_image === 'string') {
@@ -257,17 +264,21 @@ router.post('/auth/register', registerLimit, async (req, res) => {
     }
   }
 
-  if (listed) {
-    await admin.from('student_list').update({ is_claimed: true, claimed_by: profile.id }).eq('id', listed.id);
-    await registerCoursesFor(profile);
-  } else {
-    // Tell the class rep(s) of this level, and the HOD, that a registration needs review
-    const { data: reps } = await admin.from('class_reps').select('rep_id').eq('level', profile.level).eq('programme', profile.programme);
-    const { data: hods } = await admin.from('profiles').select('id').eq('role', 'hod').eq('is_active', true);
-    await notify([...(reps || []).map(r => r.rep_id), ...(hods || []).map(h => h.id)],
-      'New student registration', `${profile.full_name} (Level ${profile.level}) is waiting for approval.`);
+  try {
+    if (listed) {
+      await admin.from('student_list').update({ is_claimed: true, claimed_by: profile.id }).eq('id', listed.id);
+      await registerCoursesFor(profile);
+    } else {
+      // Tell the class rep(s) of this level, and the HOD, that a registration needs review
+      const { data: reps } = await admin.from('class_reps').select('rep_id').eq('level', profile.level).eq('programme', profile.programme);
+      const { data: hods } = await admin.from('profiles').select('id').eq('role', 'hod').eq('is_active', true);
+      await notify([...(reps || []).map(r => r.rep_id), ...(hods || []).map(h => h.id)],
+        'New student registration', `${profile.full_name} (Level ${profile.level}) is waiting for approval.`);
+    }
+    await audit(profile.id, 'profile', profile.id, listed ? 'student_registered_auto_approved' : 'student_registered');
+  } catch (postRegErr) {
+    console.warn('Post-registration notification/audit warning:', postRegErr.message);
   }
-  await audit(profile.id, 'profile', profile.id, listed ? 'student_registered_auto_approved' : 'student_registered');
 
   res.status(201).json({
     status: profile.account_status,
@@ -359,8 +370,11 @@ router.post('/auth/forgot-password', async (req, res) => {
         return res.status(400).json({
           error: 'Staff members must request a password reset with their username and registered phone number for HOD approval.'
         });
+      try {
+        await admin.auth.resetPasswordForEmail(p.email);
+      } catch (e) {
+        console.warn('Reset password email warning:', e.message);
       }
-      await admin.auth.resetPasswordForEmail(p.email).catch(() => {});
       return res.json({ message: 'Password reset instructions have been sent to your email address.' });
     }
   }
@@ -549,11 +563,15 @@ router.post('/auth/reset-with-recovery-code', passwordLimit, async (req, res) =>
   await admin.auth.admin.updateUserById(studentProfile.auth_user_id, {
     user_metadata: { recovery_code_hash: nextHash }
   });
-  await admin.from('profiles').update({
-    recovery_code_hash: nextHash,
-    must_change_password: false,
-    temp_password_expires_at: null
-  }).eq('id', studentProfile.id).catch(() => {});
+  try {
+    await admin.from('profiles').update({
+      recovery_code_hash: nextHash,
+      must_change_password: false,
+      temp_password_expires_at: null
+    }).eq('id', studentProfile.id);
+  } catch (e) {
+    console.warn('Profile recovery hash update warning:', e.message);
+  }
 
   await audit(studentProfile.id, 'profile', studentProfile.id, 'password_reset_via_recovery_code');
 
@@ -587,7 +605,11 @@ router.post('/auth/regenerate-recovery-code', authenticate, passwordLimit, async
   await admin.auth.admin.updateUserById(req.profile.auth_user_id, {
     user_metadata: { recovery_code_hash: newHash }
   });
-  await admin.from('profiles').update({ recovery_code_hash: newHash }).eq('id', req.profile.id).catch(() => {});
+  try {
+    await admin.from('profiles').update({ recovery_code_hash: newHash }).eq('id', req.profile.id);
+  } catch (e) {
+    console.warn('Profile recovery hash update warning:', e.message);
+  }
 
   await audit(req.profile.id, 'profile', req.profile.id, 'recovery_code_regenerated');
 

@@ -320,9 +320,12 @@ export async function runSessionRemindersJob() {
             starts_at: t.starts_at,
             notified_students: studentList.length
           });
-          await admin.from('class_sessions').update({ start_reminder_sent: true }).eq('id', s.id).catch(() => {});
+          try {
+            await admin.from('class_sessions').update({ start_reminder_sent: true }).eq('id', s.id);
+          } catch (e) {
+            console.warn('Reminder flag update warning:', e.message);
+          }
         }
-      }
     }
   } catch (err) {
     console.error('Error running 5-min start reminders:', err.message);
