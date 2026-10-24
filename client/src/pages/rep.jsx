@@ -14,13 +14,13 @@ import Account from './Account';
 // -------------------------------------------------------------------
 // Attendance Spline / Area Trend Chart for Class Rep
 // -------------------------------------------------------------------
-function RepAttendanceTrendChart({ currentRate = 88 }) {
+function RepAttendanceTrendChart({ currentRate = 0 }) {
   const points = [
-    { month: 'Aug', val: 52 },
-    { month: 'Sep', val: 62 },
-    { month: 'Oct', val: 70 },
-    { month: 'Nov', val: 80 },
-    { month: 'Dec', val: currentRate }
+    { month: 'Oct', val: currentRate ? Math.max(0, currentRate - 10) : 0 },
+    { month: 'Nov', val: currentRate ? Math.max(0, currentRate - 6) : 0 },
+    { month: 'Dec', val: currentRate ? Math.max(0, currentRate - 3) : 0 },
+    { month: 'Jan', val: currentRate ? Math.max(0, currentRate - 1) : 0 },
+    { month: 'Feb', val: currentRate || 0 }
   ];
 
   const width = 480;
@@ -105,7 +105,7 @@ export function RepHome() {
   if (ov.loading && !ov.data) return <Loading />;
   const d = ov.data;
   const a = d?.attendance || {};
-  const overallRate = a.rate ?? 88;
+  const overallRate = a.rate ?? 0;
 
   const dateStr = currentTime.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
   const timeStr = currentTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
@@ -882,7 +882,8 @@ export function RepTimetable() {
 export function RepStudents() {
   const students = useApi('/class-rep/students');
   const pending = useApi('/students/pending');
-  const [resetModal, setResetModal] = useState(null); // { full_name, student_id, password }
+  const resetRequests = useApi('/students/reset-requests');
+  const [resetModal, setResetModal] = useState(null); // { full_name, student_id, phone_number, password }
   const { busy, error, ok, run, setOk } = useAction();
 
   const handleDecision = (id, decision) => run(`decision-${id}`, async () => {
@@ -894,26 +895,77 @@ export function RepStudents() {
   const handleResetPassword = student => run(`reset-${student.id}`, async () => {
     const res = await apiFetch(`/students/${student.id}/reset-password`, { method: 'POST' });
     setResetModal(res);
+    resetRequests.reload();
   });
+
+  const handleRejectReset = student => run(`reject-${student.id}`, async () => {
+    await apiFetch(`/students/${student.id}/reject-reset`, { method: 'POST' });
+    resetRequests.reload();
+  }, 'Reset request dismissed.');
 
   return (
     <>
-      <ErrorText>{students.error || pending.error || error}</ErrorText>
+      <ErrorText>{students.error || pending.error || resetRequests.error || error}</ErrorText>
       <Success>{ok}</Success>
 
       {/* Password reset modal */}
       {resetModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 10, display: 'grid', placeItems: 'center', padding: 16 }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 50, display: 'grid', placeItems: 'center', padding: 16 }}>
           <div className="panel" style={{ maxWidth: 440, width: '100%', margin: 0 }}>
             <h3>Temporary Password Generated</h3>
             <p className="muted small">Share this temporary password directly with <strong>{resetModal.full_name}</strong>:</p>
             <div style={{ background: '#f4f7fb', padding: 14, borderRadius: 10, margin: '12px 0', textAlign: 'center' }}>
               <div style={{ fontSize: 24, fontWeight: 700, letterSpacing: 2, color: '#102a43' }}>{resetModal.password}</div>
-              <small className="muted">Expires in 48 hours. Forced change on first login.</small>
+              <small className="muted" style={{ display: 'block', marginTop: 4 }}>
+                Expires in 48 hours. Forced change on first login.
+              </small>
             </div>
-            <button className="primary" onClick={() => setResetModal(null)}>Done</button>
+            {resetModal.phone_number && (
+              <a
+                className="whatsapp"
+                style={{ justifyContent: 'center', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}
+                href={`https://wa.me/${String(resetModal.phone_number || '').replace(/\D/g, '')}?text=${encodeURIComponent(`Hello ${resetModal.full_name},\n\nYour temporary password for MMTU CS Attendance is: ${resetModal.password}\n\nPlease sign in and set your new permanent password.`)}`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                <Send size={16} /> Send via WhatsApp
+              </a>
+            )}
+            <button className="primary" style={{ width: '100%' }} onClick={() => setResetModal(null)}>Done</button>
           </div>
         </div>
+      )}
+
+      {/* Password reset requests from students in class */}
+      {resetRequests.data?.length > 0 && (
+        <Panel title={`Password Reset Requests (${resetRequests.data.length})`}>
+          {resetRequests.data.map(s => (
+            <div className="row" key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+              <Avatar user={s} size={38} />
+              <div style={{ flex: 1, minWidth: 180 }}>
+                <strong>{s.full_name}</strong> {s.student_id ? <span className="muted">({s.student_id})</span> : ''}
+                <p className="muted small">Phone: {s.phone_number} · Requested: {fmtDateTime(s.requested_at)}</p>
+              </div>
+              <div style={{ display: 'flex', gap: 6 }}>
+                <button
+                  className="primary compact"
+                  style={{ background: '#059669', borderColor: '#059669' }}
+                  disabled={busy === `reset-${s.id}`}
+                  onClick={() => handleResetPassword(s)}
+                >
+                  <KeyRound size={14} /> Generate Temporary Password
+                </button>
+                <button
+                  className="secondary compact danger"
+                  disabled={busy === `reject-${s.id}`}
+                  onClick={() => handleRejectReset(s)}
+                >
+                  <X size={14} /> Dismiss
+                </button>
+              </div>
+            </div>
+          ))}
+        </Panel>
       )}
 
       {/* Pending registrations to approve/reject */}
@@ -965,12 +1017,13 @@ export function RepStudents() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <strong className={att.rate >= 75 ? 'good' : 'low'}>{pct(att.rate)}</strong>
                   <button
-                    className="action-btn"
-                    title="Reset Password"
+                    className="secondary compact"
+                    style={{ fontSize: 11, padding: '4px 8px' }}
+                    title="Generate Temporary Password"
                     disabled={busy === `reset-${s.id}`}
                     onClick={() => handleResetPassword(s)}
                   >
-                    <KeyRound size={15} />
+                    <KeyRound size={12} /> Reset Password
                   </button>
                 </div>
               </div>

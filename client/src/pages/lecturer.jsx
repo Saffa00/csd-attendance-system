@@ -17,13 +17,13 @@ import { ReportsPage } from './Reports';
 // -------------------------------------------------------------------
 // Attendance Trend Spline Chart
 // -------------------------------------------------------------------
-function AttendanceTrendChart({ currentRate = 89 }) {
+function AttendanceTrendChart({ currentRate = 0 }) {
   const points = [
-    { month: 'Aug', val: 50 },
-    { month: 'Sep', val: 58 },
-    { month: 'Oct', val: 65 },
-    { month: 'Nov', val: 78 },
-    { month: 'Dec', val: currentRate }
+    { month: 'Oct', val: currentRate ? Math.max(0, currentRate - 10) : 0 },
+    { month: 'Nov', val: currentRate ? Math.max(0, currentRate - 6) : 0 },
+    { month: 'Dec', val: currentRate ? Math.max(0, currentRate - 3) : 0 },
+    { month: 'Jan', val: currentRate ? Math.max(0, currentRate - 1) : 0 },
+    { month: 'Feb', val: currentRate || 0 }
   ];
 
   const width = 480;
@@ -340,7 +340,7 @@ export function LecturerHome() {
 
   if (ov.loading && !ov.data) return <Loading />;
   const d = ov.data;
-  const overallRate = d?.attendance_rate ?? d?.attendance?.rate ?? 89;
+  const overallRate = d?.attendance_rate ?? d?.attendance?.rate ?? 0;
 
   const dateStr = currentTime.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
   const timeStr = currentTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });

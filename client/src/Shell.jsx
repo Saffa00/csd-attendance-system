@@ -113,17 +113,23 @@ export default function Shell({ mobileNav = [], sidebarNav = [], nav, titles = {
       try {
         const perm = await Notification.requestPermission();
         if (perm === 'granted') {
-          triggerDeviceAlert('🔔 Notifications Active', 'You will now receive 5-min class alerts and 20-min attendance reminders!');
+          triggerDeviceAlert('🔔 Notifications Active', 'You will now receive alerts even when the app is closed!');
         }
       } catch {}
     }
-    if (window.OneSignalDeferred) {
-      window.OneSignalDeferred.push(async OneSignal => {
-        try { await OneSignal.Notifications.requestPermission(); } catch {}
-      });
-    }
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+    window.OneSignalDeferred.push(async OneSignal => {
+      try {
+        await OneSignal.Notifications.requestPermission();
+        if (profile?.id) {
+          await OneSignal.login(profile.id);
+        }
+      } catch (err) {
+        console.warn('OneSignal permission warning:', err);
+      }
+    });
     setShowPermissionPrompt(false);
-  }, []);
+  }, [profile?.id]);
 
   // Real-time notification polling and native device alerts
   useEffect(() => {

@@ -36,14 +36,24 @@ export function AuthProvider({ children }) {
       try {
         const p = await apiFetch('/auth/me');
         setProfile(p);
-        if (p?.id && window.OneSignalDeferred) {
+        if (p?.id) {
+          window.OneSignalDeferred = window.OneSignalDeferred || [];
           window.OneSignalDeferred.push(async OneSignal => {
             try {
-              if (import.meta.env.VITE_ONESIGNAL_APP_ID) {
-                await OneSignal.init({ appId: import.meta.env.VITE_ONESIGNAL_APP_ID });
+              const appId = import.meta.env.VITE_ONESIGNAL_APP_ID || 'hwjig6nazenmmi64rpjgekmzd';
+              if (appId) {
+                await OneSignal.init({
+                  appId,
+                  allowLocalhostAsSecureOrigin: true,
+                  serviceWorkerParam: { scope: '/' },
+                  serviceWorkerPath: '/OneSignalSDKWorker.js',
+                  notifyButton: { enable: false }
+                });
               }
               await OneSignal.login(p.id);
-            } catch {}
+            } catch (err) {
+              console.warn('OneSignal init warning:', err);
+            }
           });
         }
         if (uid) cacheSet(uid, 'profile', p).catch(() => {});
@@ -107,14 +117,24 @@ export function AuthProvider({ children }) {
     const { error } = await supabase.auth.setSession({ access_token: body.session.access_token, refresh_token: body.session.refresh_token }).catch(() => ({ error: null }));
     if (error) console.warn('Supabase session set warning:', error.message);
     setProfile(body.profile);
-    if (body.profile?.id && window.OneSignalDeferred) {
+    if (body.profile?.id) {
+      window.OneSignalDeferred = window.OneSignalDeferred || [];
       window.OneSignalDeferred.push(async OneSignal => {
         try {
-          if (import.meta.env.VITE_ONESIGNAL_APP_ID) {
-            await OneSignal.init({ appId: import.meta.env.VITE_ONESIGNAL_APP_ID });
+          const appId = import.meta.env.VITE_ONESIGNAL_APP_ID || 'hwjig6nazenmmi64rpjgekmzd';
+          if (appId) {
+            await OneSignal.init({
+              appId,
+              allowLocalhostAsSecureOrigin: true,
+              serviceWorkerParam: { scope: '/' },
+              serviceWorkerPath: '/OneSignalSDKWorker.js',
+              notifyButton: { enable: false }
+            });
           }
           await OneSignal.login(body.profile.id);
-        } catch {}
+        } catch (err) {
+          console.warn('OneSignal login warning:', err);
+        }
       });
     }
     return body.profile;

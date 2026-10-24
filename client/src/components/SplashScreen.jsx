@@ -42,8 +42,8 @@ export default function SplashScreen({ onFinish, minDuration = 2000 }) {
         alignItems: 'center',
         justifyContent: 'space-between',
         padding: '48px 24px 32px',
-        background: 'radial-gradient(circle at 50% 35%, #102a6b 0%, #081538 50%, #030a1a 100%)',
-        color: '#ffffff',
+        background: '#ffffff',
+        color: '#0f172a',
         opacity: fading ? 0 : 1,
         transition: 'opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
         pointerEvents: fading ? 'none' : 'auto',
@@ -110,9 +110,8 @@ export default function SplashScreen({ onFinish, minDuration = 2000 }) {
             fontSize: 'clamp(20px, 4.5vw, 26px)',
             fontWeight: 800,
             letterSpacing: '0.01em',
-            color: '#ffffff',
+            color: '#0f172a',
             lineHeight: 1.25,
-            textShadow: '0 2px 10px rgba(0,0,0,0.5)',
             animation: 'textSlideUp 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards'
           }}
         >
@@ -124,7 +123,7 @@ export default function SplashScreen({ onFinish, minDuration = 2000 }) {
           style={{
             margin: '0 0 28px',
             fontSize: 'clamp(12px, 2.5vw, 13.5px)',
-            color: '#93c5fd',
+            color: '#2563eb',
             fontWeight: 500,
             lineHeight: 1.5,
             maxWidth: 380,
@@ -141,7 +140,7 @@ export default function SplashScreen({ onFinish, minDuration = 2000 }) {
             width: '100%',
             maxWidth: 240,
             height: 5,
-            background: 'rgba(255, 255, 255, 0.12)',
+            background: 'rgba(0, 0, 0, 0.08)',
             borderRadius: 10,
             overflow: 'hidden',
             position: 'relative',
@@ -167,7 +166,7 @@ export default function SplashScreen({ onFinish, minDuration = 2000 }) {
             display: 'block',
             marginTop: 10,
             fontSize: 11,
-            color: '#60a5fa',
+            color: '#2563eb',
             fontWeight: 500,
             letterSpacing: '0.04em',
             textTransform: 'uppercase'

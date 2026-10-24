@@ -56,6 +56,58 @@ router.patch('/students/:id/decision', async (req, res) => {
   } catch (e) { fail(res, e, e.status || 400); }
 });
 
+// List pending student password reset requests
+router.get('/students/reset-requests', async (req, res) => {
+  try {
+    let q = admin.from('profiles')
+      .select('id,auth_user_id,student_id,full_name,phone_number,programme,level,created_at')
+      .eq('role', 'student');
+    const role = (req.profile?.role || '').toLowerCase();
+    if (role === 'class_rep' || role === 'rep') {
+      const a = await getRepAllocation(req.profile.id);
+      if (a.level) q = q.eq('level', a.level);
+      if (a.programme) q = q.ilike('programme', a.programme);
+    }
+    const { data: students, error } = await q;
+    if (error) return fail(res, error);
+
+    const pending = [];
+    for (const s of (students || [])) {
+      if (s.auth_user_id) {
+        const { data: u } = await admin.auth.admin.getUserById(s.auth_user_id);
+        if (u?.user?.user_metadata?.student_reset_pending) {
+          pending.push({
+            id: s.id,
+            student_id: s.student_id,
+            full_name: s.full_name,
+            phone_number: s.phone_number,
+            programme: s.programme,
+            level: s.level,
+            requested_at: u.user.user_metadata.student_reset_requested_at || s.created_at
+          });
+        }
+      }
+    }
+    res.json(pending);
+  } catch (e) { fail(res, e, e.status || 400); }
+});
+
+// Dismiss / reject a student password reset request
+router.post('/students/:id/reject-reset', async (req, res) => {
+  try {
+    const m = await manageable(req, req.params.id);
+    if (m.error) return fail(res, m.error, m.status);
+    const s = m.student;
+    if (s.auth_user_id) {
+      await admin.auth.admin.updateUserById(s.auth_user_id, {
+        user_metadata: { student_reset_pending: false }
+      });
+    }
+    await audit(req.profile.id, 'profile', s.id, 'student_password_reset_rejected');
+    res.json({ ok: true });
+  } catch (e) { fail(res, e, e.status || 400); }
+});
+
 // "Forgot password" for students is handled here by the HOD or the class rep.
 router.post('/students/:id/reset-password', resendLimit, async (req, res) => {
   try {
@@ -63,7 +115,10 @@ router.post('/students/:id/reset-password', resendLimit, async (req, res) => {
     if (m.error) return fail(res, m.error, m.status);
     const s = m.student;
     const password = randomPassword();
-    const { error } = await admin.auth.admin.updateUserById(s.auth_user_id, { password });
+    const { error } = await admin.auth.admin.updateUserById(s.auth_user_id, {
+      password,
+      user_metadata: { student_reset_pending: false }
+    });
     if (error) return fail(res, 'Could not reset the password');
     await admin.from('profiles').update({
       must_change_password: true,
@@ -72,7 +127,7 @@ router.post('/students/:id/reset-password', resendLimit, async (req, res) => {
     await admin.from('login_attempts').delete().in('key', [`acct:${normaliseName(s.student_id || s.full_name)}`]);
     await audit(req.profile.id, 'profile', s.id, 'student_password_reset');
     // Shown once to the HOD / rep, who hands it to the student. It is not stored anywhere.
-    res.json({ full_name: s.full_name, student_id: s.student_id, password });
+    res.json({ full_name: s.full_name, student_id: s.student_id, phone_number: s.phone_number, password });
   } catch (e) { fail(res, e, e.status || 400); }
 });
 

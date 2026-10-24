@@ -238,10 +238,12 @@ router.post('/auth/register', registerLimit, async (req, res) => {
       programme: listed?.programme || b.programme,
       level: listed?.level || b.level,
       academic_year_id: year?.id || null,
-      account_status: 'approved',
+      // Auto-approve only if the student ID was found on the HOD's uploaded list.
+      // Otherwise set 'pending' so the class rep or HOD must manually approve.
+      account_status: listed ? 'approved' : 'pending',
       is_active: true,
       recovery_code_hash: recoveryHash,
-      approved_at: new Date().toISOString()
+      ...(listed ? { approved_at: new Date().toISOString() } : {})
     }).select('*').single();
 
     if (error || !profile) {
@@ -292,20 +294,22 @@ router.post('/auth/register', registerLimit, async (req, res) => {
         await admin.from('student_list').update({ is_claimed: true, claimed_by: profile.id }).eq('id', listed.id);
         await registerCoursesFor(profile);
       } else {
-        // Tell the class rep(s) of this level, and the HOD, that a registration needs review
+        // Tell the class rep(s) of this level/programme and the HOD about the pending registration
         const { data: reps } = await admin.from('class_reps').select('rep_id').eq('level', profile.level).eq('programme', profile.programme);
         const { data: hods } = await admin.from('profiles').select('id').eq('role', 'hod').eq('is_active', true);
         await notify([...(reps || []).map(r => r.rep_id), ...(hods || []).map(h => h.id)],
-          'New student registration', `${profile.full_name} (Level ${profile.level}) is waiting for approval.`);
+          'New student registration awaiting approval', `${profile.full_name} (Level ${profile.level}) has registered and is waiting for your approval.`);
       }
-      await audit(profile.id, 'profile', profile.id, listed ? 'student_registered_auto_approved' : 'student_registered');
+      await audit(profile.id, 'profile', profile.id, listed ? 'student_registered_auto_approved' : 'student_registered_pending');
     } catch (postRegErr) {
       console.warn('Post-registration notification/audit warning:', postRegErr.message);
     }
 
     res.status(201).json({
       status: profile.account_status,
-      message: 'Registration complete and approved. Save your recovery code below.',
+      message: listed
+        ? 'Registration complete and approved. Save your recovery code below.'
+        : 'Registration submitted. Your class representative or HOD will review and approve your account. Save your recovery code below.',
       recovery_code: recoveryCode,
       student_name: profile.full_name,
       student_id: profile.student_id || profile.phone_number
@@ -408,9 +412,19 @@ router.post('/auth/forgot-password', async (req, res) => {
   }
 
   // 3. If student ID or Full Name
-  const { data: student } = await admin.from('profiles').select('id,full_name,student_id,level,programme').eq('role', 'student')
+  const { data: student } = await admin.from('profiles')
+    .select('id,auth_user_id,full_name,student_id,phone_number,level,programme')
+    .eq('role', 'student')
     .or(`student_id.eq.${id},full_name.ilike.%${id}%`).limit(1).maybeSingle();
   if (student) {
+    if (student.auth_user_id) {
+      await admin.auth.admin.updateUserById(student.auth_user_id, {
+        user_metadata: {
+          student_reset_pending: true,
+          student_reset_requested_at: new Date().toISOString()
+        }
+      });
+    }
     const { data: reps } = await admin.from('class_reps').select('rep_id').eq('level', student.level);
     const { data: hods } = await admin.from('profiles').select('id').eq('role', 'hod').eq('is_active', true);
     await notify(

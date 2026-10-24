@@ -40,21 +40,21 @@ const NAV_CONFIG = {
     { label: 'Home', icon: Home, to: '/' },
     { label: 'Timetable', icon: CalendarDays, to: '/timetable' },
     { label: 'Attendance', icon: ClipboardCheck, to: '/attendance' },
-    { label: 'Modules', icon: BookOpen, to: '/registered-modules' },
+    { label: 'Notices', icon: Megaphone, to: '/announcements' },
     { label: 'More', icon: MoreHorizontal, to: '/more' }
   ],
   lecturer: [
     { label: 'Home', icon: Home, to: '/' },
     { label: 'Sessions', icon: CalendarDays, to: '/sessions' },
     { label: 'Approvals', icon: ClipboardCheck, to: '/approvals' },
-    { label: 'Modules', icon: BookOpen, to: '/courses' },
+    { label: 'Notices', icon: Megaphone, to: '/announcements' },
     { label: 'More', icon: MoreHorizontal, to: '/more' }
   ],
   class_rep: [
     { label: 'Home', icon: Home, to: '/' },
     { label: 'Timetable', icon: CalendarDays, to: '/timetable' },
     { label: 'Students', icon: Users, to: '/students' },
-    { label: 'Modules', icon: BookOpen, to: '/modules' },
+    { label: 'Notices', icon: Megaphone, to: '/announcements' },
     { label: 'More', icon: MoreHorizontal, to: '/more' }
   ],
   hod: [
@@ -82,7 +82,6 @@ const SIDEBAR_CONFIG = {
       group: 'Campus & Notices',
       items: [
         { label: 'Department Notices', icon: Megaphone, to: '/announcements' },
-        { label: 'My Registered Modules', icon: BookOpen, to: '/profile' },
         { label: 'Lecture Halls & GPS', icon: MapPin, to: '/venues' },
         { label: 'Department Hub', icon: MoreHorizontal, to: '/more' }
       ]
@@ -257,9 +256,7 @@ export default function App() {
             <Route path="/timetable" element={<StudentTimetable />} />
             <Route path="/attendance" element={<StudentAttendance />} />
             <Route path="/history" element={<StudentHistory />} />
-            <Route path="/profile" element={<StudentProfile />} />
-            <Route path="/registered-modules" element={<StudentProfile />} />
-            <Route path="/modules" element={<StudentProfile />} />
+            <Route path="/profile" element={<Account />} />
           </>
         )}
 
@@ -268,7 +265,6 @@ export default function App() {
           <>
             <Route path="/" element={<LecturerHome />} />
             <Route path="/courses" element={<LecturerCourses />} />
-            <Route path="/modules" element={<LecturerCourses />} />
             <Route path="/sessions" element={<LecturerSessions />} />
             <Route path="/approvals" element={<LecturerApprovals />} />
             <Route path="/reports" element={<LecturerReports />} />
@@ -282,9 +278,6 @@ export default function App() {
             <Route path="/timetable" element={<RepTimetable />} />
             <Route path="/students" element={<RepStudents />} />
             <Route path="/attendance" element={<RepAttendance />} />
-            <Route path="/modules" element={<StudentProfile />} />
-            <Route path="/registered-modules" element={<StudentProfile />} />
-            <Route path="/courses" element={<StudentProfile />} />
             <Route path="/reports" element={<LecturerReports />} />
             <Route path="/profile" element={<Account />} />
           </>

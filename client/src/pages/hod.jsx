@@ -27,13 +27,13 @@ function buildWhatsAppLink(phone, name, username, tempPassword, loginUrl) {
 // -------------------------------------------------------------------
 // Attendance Spline / Area Trend Chart
 // -------------------------------------------------------------------
-function AttendanceTrendChart({ currentRate = 89 }) {
+function AttendanceTrendChart({ currentRate = 0 }) {
   const points = [
-    { month: 'Aug', val: 50 },
-    { month: 'Sep', val: 58 },
-    { month: 'Oct', val: 65 },
-    { month: 'Nov', val: 78 },
-    { month: 'Dec', val: currentRate }
+    { month: 'Oct', val: currentRate ? Math.max(0, currentRate - 10) : 0 },
+    { month: 'Nov', val: currentRate ? Math.max(0, currentRate - 6) : 0 },
+    { month: 'Dec', val: currentRate ? Math.max(0, currentRate - 3) : 0 },
+    { month: 'Jan', val: currentRate ? Math.max(0, currentRate - 1) : 0 },
+    { month: 'Feb', val: currentRate || 0 }
   ];
 
   const width = 480;
@@ -352,7 +352,7 @@ export function HodHome() {
   if (ov.loading && !ov.data) return <Loading />;
   const d = ov.data;
   const a = d?.attendance || {};
-  const overallRate = a.rate ?? 89;
+  const overallRate = a.rate ?? 0;
 
   const dateStr = currentTime.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
   const timeStr = currentTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
@@ -1229,7 +1229,7 @@ export function HodStaff({ targetRole }) {
                     disabled={busy === `approve-${r.id}`}
                     style={{ fontSize: 11, padding: '4px 10px', background: '#059669', borderColor: '#059669' }}
                   >
-                    <Send size={12} /> Approve & Send via WhatsApp
+                    <KeyRound size={12} /> Generate Temporary Password & Send
                   </button>
                   <button
                     className="secondary compact danger"
@@ -1313,12 +1313,14 @@ export function HodStaff({ targetRole }) {
 
 // =================================================================== HOD STUDENTS & AUTO-APPROVAL LIST
 export function HodStudents() {
-  const [tab, setTab] = useState('directory'); // 'directory', 'pending', 'upload'
+  const [tab, setTab] = useState('directory'); // 'directory', 'pending', 'reset-requests', 'upload'
   const students = useApi('/hod/students');
   const pending = useApi('/students/pending');
+  const resetRequests = useApi('/students/reset-requests');
   const listStats = useApi('/hod/student-list');
   const [csvText, setCsvText] = useState('');
   const [uploadResult, setUploadResult] = useState(null);
+  const [resetModal, setResetModal] = useState(null); // { full_name, student_id, phone_number, password }
 
   const { busy, error, ok, run } = useAction();
 
@@ -1332,6 +1334,17 @@ export function HodStudents() {
     await apiFetch(`/hod/students/${id}/status`, { method: 'PATCH', body: { is_active: !is_active } });
     students.reload();
   });
+
+  const handleResetPassword = student => run(`reset-${student.id}`, async () => {
+    const res = await apiFetch(`/students/${student.id}/reset-password`, { method: 'POST' });
+    setResetModal(res);
+    resetRequests.reload();
+  });
+
+  const handleRejectReset = student => run(`reject-${student.id}`, async () => {
+    await apiFetch(`/students/${student.id}/reject-reset`, { method: 'POST' });
+    resetRequests.reload();
+  }, 'Reset request dismissed.');
 
   const handleUploadList = e => {
     e.preventDefault();
@@ -1357,20 +1370,85 @@ export function HodStudents() {
 
   return (
     <>
-      <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+      <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
         <button className={tab === 'directory' ? 'primary compact' : 'secondary compact'} onClick={() => setTab('directory')}>
           Directory ({students.data?.length || 0})
         </button>
         <button className={tab === 'pending' ? 'primary compact' : 'secondary compact'} onClick={() => setTab('pending')}>
           Pending Registrations ({pending.data?.length || 0})
         </button>
+        <button className={tab === 'reset-requests' ? 'primary compact' : 'secondary compact'} onClick={() => setTab('reset-requests')}>
+          Reset Requests ({resetRequests.data?.length || 0})
+        </button>
         <button className={tab === 'upload' ? 'primary compact' : 'secondary compact'} onClick={() => setTab('upload')}>
           Auto-Approval List
         </button>
       </div>
 
-      <ErrorText>{students.error || pending.error || listStats.error || error}</ErrorText>
+      <ErrorText>{students.error || pending.error || resetRequests.error || listStats.error || error}</ErrorText>
       <Success>{ok}</Success>
+
+      {/* Student Temporary Password Modal */}
+      {resetModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 50, display: 'grid', placeItems: 'center', padding: 16 }}>
+          <div className="panel" style={{ maxWidth: 440, width: '100%', margin: 0 }}>
+            <h3>Temporary Password Generated</h3>
+            <p className="muted small">Share this temporary password directly with <strong>{resetModal.full_name}</strong>:</p>
+            <div style={{ background: '#f4f7fb', padding: 14, borderRadius: 10, margin: '12px 0', textAlign: 'center' }}>
+              <div style={{ fontSize: 24, fontWeight: 700, letterSpacing: 2, color: '#102a43' }}>{resetModal.password}</div>
+              <small className="muted" style={{ display: 'block', marginTop: 4 }}>
+                Expires in 48 hours. Forced password change on first login.
+              </small>
+            </div>
+            {resetModal.phone_number && (
+              <a
+                className="whatsapp"
+                style={{ justifyContent: 'center', marginBottom: 8 }}
+                href={`https://wa.me/${String(resetModal.phone_number || '').replace(/\D/g, '')}?text=${encodeURIComponent(`Hello ${resetModal.full_name},\n\nYour temporary password for MMTU CS Attendance is: ${resetModal.password}\n\nPlease sign in and set your new permanent password.`)}`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                <Send size={16} /> Send via WhatsApp
+              </a>
+            )}
+            <button className="primary" style={{ width: '100%' }} onClick={() => setResetModal(null)}>Done</button>
+          </div>
+        </div>
+      )}
+
+      {tab === 'reset-requests' && (
+        <Panel title={`Student Password Reset Requests (${resetRequests.data?.length || 0})`}>
+          {!resetRequests.data?.length ? <Empty>No pending password reset requests from students.</Empty> : (
+            resetRequests.data.map(s => (
+              <div className="row" key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+                <Avatar user={s} size={40} />
+                <div style={{ flex: 1, minWidth: 200 }}>
+                  <strong>{s.full_name}</strong> {s.student_id ? <span className="muted">({s.student_id})</span> : ''}
+                  <p className="muted small">Level {s.level} · {s.programme} · Phone: {s.phone_number}</p>
+                  <p className="muted small">Requested: {fmtDateTime(s.requested_at)}</p>
+                </div>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <button
+                    className="primary compact"
+                    style={{ background: '#059669', borderColor: '#059669' }}
+                    disabled={busy === `reset-${s.id}`}
+                    onClick={() => handleResetPassword(s)}
+                  >
+                    <KeyRound size={14} /> Generate Temporary Password
+                  </button>
+                  <button
+                    className="secondary compact danger"
+                    disabled={busy === `reject-${s.id}`}
+                    onClick={() => handleRejectReset(s)}
+                  >
+                    <X size={14} /> Dismiss
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </Panel>
+      )}
 
       {tab === 'upload' && (
         <Panel title="Upload Student ID List for Auto-Approval">
@@ -1447,14 +1525,25 @@ export function HodStudents() {
                     <span className={s.is_active ? 'badge ok' : 'badge bad'}>{s.is_active ? 'Active' : 'Inactive'}</span>
                   </div>
                 </div>
-                <button
-                  className={s.is_active ? 'danger compact' : 'secondary compact'}
-                  style={{ fontSize: 11, padding: '4px 8px' }}
-                  disabled={busy === `toggle-${s.id}`}
-                  onClick={() => handleToggleStatus(s.id, s.is_active)}
-                >
-                  {s.is_active ? 'Deactivate' : 'Activate'}
-                </button>
+                <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                  <button
+                    className="secondary compact"
+                    style={{ fontSize: 11, padding: '4px 8px' }}
+                    title="Generate Temporary Password"
+                    disabled={busy === `reset-${s.id}`}
+                    onClick={() => handleResetPassword(s)}
+                  >
+                    <KeyRound size={12} /> Reset Password
+                  </button>
+                  <button
+                    className={s.is_active ? 'danger compact' : 'secondary compact'}
+                    style={{ fontSize: 11, padding: '4px 8px' }}
+                    disabled={busy === `toggle-${s.id}`}
+                    onClick={() => handleToggleStatus(s.id, s.is_active)}
+                  >
+                    {s.is_active ? 'Deactivate' : 'Activate'}
+                  </button>
+                </div>
               </div>
             ))
           )}

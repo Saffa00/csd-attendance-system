@@ -13,12 +13,18 @@ export async function notify(recipientIds, title, body) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Key ${apiKey}` },
       body: JSON.stringify({
-        app_id: appId, target_channel: 'push',
+        app_id: appId,
+        target_channel: 'push',
         include_aliases: { external_id: ids },
-        headings: { en: title }, contents: { en: body }
+        headings: { en: title },
+        contents: { en: body },
+        url: process.env.APP_LOGIN_URL || undefined
       })
     });
-    if (!r.ok) console.error('OneSignal delivery failed:', r.status);
+    if (!r.ok) {
+      const errText = await r.text();
+      console.error('OneSignal delivery failed:', r.status, errText);
+    }
   } catch (e) {
     console.error('OneSignal request failed:', e.message);
   }

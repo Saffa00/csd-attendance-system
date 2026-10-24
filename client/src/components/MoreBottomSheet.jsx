@@ -157,15 +157,8 @@ export default function MoreBottomSheet({ isOpen, onClose, profile, onSignOut })
     }
   ];
 
-  // Lecturer items (not on footer: Home, Sessions, Approvals, Modules):
+  // Lecturer items (not on footer: Home, Sessions, Approvals, Notices):
   const lecturerItems = [
-    {
-      to: '/announcements',
-      label: 'Department Notices',
-      icon: Megaphone,
-      badge: unreadCount > 0 ? unreadCount : null,
-      color: 'bg-amber-50 text-amber-600'
-    },
     {
       to: '/reports',
       label: 'Attendance Reports',
@@ -199,15 +192,8 @@ export default function MoreBottomSheet({ isOpen, onClose, profile, onSignOut })
     }
   ];
 
-  // Class Rep items (not on footer: Home, Timetable, Students, Modules):
+  // Class Rep items (not on footer: Home, Timetable, Students, Notices):
   const repItems = [
-    {
-      to: '/announcements',
-      label: 'Department Notices',
-      icon: Megaphone,
-      badge: unreadCount > 0 ? unreadCount : null,
-      color: 'bg-amber-50 text-amber-600'
-    },
     {
       to: '/attendance',
       label: 'Class Attendance',
@@ -241,15 +227,8 @@ export default function MoreBottomSheet({ isOpen, onClose, profile, onSignOut })
     }
   ];
 
-  // Student items (not on footer: Home, Timetable, Attendance, Modules):
+  // Student items (not on footer: Home, Timetable, Attendance, Notices):
   const studentItems = [
-    {
-      to: '/announcements',
-      label: 'Department Notices',
-      icon: Megaphone,
-      badge: unreadCount > 0 ? unreadCount : null,
-      color: 'bg-amber-50 text-amber-600'
-    },
     {
       to: '/history',
       label: 'Attendance History',
