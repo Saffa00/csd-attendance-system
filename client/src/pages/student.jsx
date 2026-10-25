@@ -1013,12 +1013,6 @@ export function StudentTimetable() {
 
   return (
     <div className="student-timetable-container" style={{ maxWidth: 1140, margin: '0 auto', paddingBottom: 60 }}>
-      {/* Breadcrumbs */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: '#64748b', marginBottom: 16 }}>
-        <Link to="/" style={{ color: '#2563eb', textDecoration: 'none' }}>Home</Link>
-        <ChevronRight size={14} color="#94a3b8" />
-        <span style={{ color: '#1e293b', fontWeight: 600 }}>Today's Timetable</span>
-      </div>
 
       <ErrorText>{t.error}</ErrorText>
       <CacheNote {...t} />
@@ -2903,13 +2897,8 @@ export function StudentProfile() {
 
   return (
     <div className="mod-page-container">
-      {/* Top Breadcrumb & Header */}
+      {/* Header */}
       <div className="mod-header-row">
-        <div className="mod-breadcrumb">
-          <Link to="/" className="mod-breadcrumb-link">Dashboard</Link>
-          <ChevronRight size={14} className="mod-breadcrumb-sep" />
-          <span className="mod-breadcrumb-active">Registered Modules</span>
-        </div>
 
         <div className="mod-title-pills-row">
           <div className="mod-title-box">

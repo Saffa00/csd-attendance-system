@@ -132,13 +132,8 @@ export function RepHome() {
 
   return (
     <div className="hod-dashboard">
-      {/* Top Header & Breadcrumb */}
+      {/* Top Header */}
       <div className="hod-dashboard-header">
-        <div className="hod-breadcrumb">
-          <Link to="/" className="hod-breadcrumb-link">Home</Link>
-          <ChevronRight size={14} className="hod-breadcrumb-sep" />
-          <span className="hod-breadcrumb-current">Dashboard</span>
-        </div>
 
         {/* Welcome Banner */}
         <div className="hod-welcome-banner">
@@ -1006,19 +1001,46 @@ export function RepStudents() {
           students.data.map(s => {
             const att = s.attendance || {};
             return (
-              <div className="row" key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <Avatar user={s} size={38} />
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <strong>{s.full_name}</strong> {s.student_id ? <span className="muted">({s.student_id})</span> : ''}
-                  <p className="muted small">
-                    Phone: {s.phone_number} · Present: <b>{att.approved || 0}</b> / {att.total || 0}
-                  </p>
+              <div
+                key={s.id}
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 10,
+                  padding: '12px 14px',
+                  background: '#ffffff',
+                  borderRadius: 12,
+                  border: '1px solid #e2e8f0',
+                  marginBottom: 10,
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.03)'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                  <Avatar user={s} size={40} style={{ flexShrink: 0, marginTop: 2 }} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6, flexWrap: 'wrap' }}>
+                      <strong style={{ fontSize: 14, color: '#0f172a' }}>{s.full_name}</strong>
+                      <strong className={att.rate >= 75 ? 'good' : 'low'} style={{ fontSize: 13 }}>{pct(att.rate)}</strong>
+                    </div>
+                    <p className="muted small" style={{ margin: '3px 0 0', lineHeight: 1.4, wordBreak: 'break-word' }}>
+                      {s.student_id ? `${s.student_id} · ` : ''}Phone: <b>{s.phone_number}</b>
+                    </p>
+                    <p className="muted small" style={{ margin: '2px 0 0' }}>
+                      Attendance: <b>{att.approved || 0}</b> present / {att.total || 0} sessions
+                    </p>
+                  </div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <strong className={att.rate >= 75 ? 'good' : 'low'}>{pct(att.rate)}</strong>
+
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'flex-end',
+                  borderTop: '1px solid #f1f5f9',
+                  paddingTop: 8
+                }}>
                   <button
                     className="secondary compact"
-                    style={{ fontSize: 11, padding: '4px 8px' }}
+                    style={{ fontSize: 11, padding: '5px 10px', minHeight: 30 }}
                     title="Generate Temporary Password"
                     disabled={busy === `reset-${s.id}`}
                     onClick={() => handleResetPassword(s)}

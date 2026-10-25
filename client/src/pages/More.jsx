@@ -250,12 +250,6 @@ export default function More() {
 
   return (
     <div className="dept-hub-wrapper max-w-5xl mx-auto px-2 sm:px-4 py-4 space-y-5">
-      {/* 1. Breadcrumbs (Desktop Only) */}
-      <div className="hidden md:flex items-center gap-2 text-xs text-slate-500 font-medium">
-        <Link to="/" className="text-primary no-underline hover:underline">Home</Link>
-        <span>›</span>
-        <span className="text-slate-800 font-semibold">More Features</span>
-      </div>
 
       {/* 2. User Profile Summary Banner (Desktop Only) */}
       <div className="hidden md:flex bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-xs flex-col sm:flex-row sm:items-center justify-between gap-4">

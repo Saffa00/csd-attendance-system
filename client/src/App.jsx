@@ -190,28 +190,27 @@ const SIDEBAR_CONFIG = {
 
 const TITLES = {
   '/': 'Home',
-  '/modules': 'Department Modules',
+  '/modules': 'Modules',
   '/timetable': 'Class Timetable',
   '/attendance': 'Attendance',
   '/history': 'Attendance History',
-  '/profile': 'My Registered Modules',
-  '/registered-modules': 'My Registered Modules',
+  '/profile': 'My Profile',
   '/courses': 'My Courses',
   '/sessions': 'Class Sessions',
   '/approvals': 'Attendance Approvals',
   '/reports': 'Reports & Export',
   '/students': 'Students',
-  '/lecturers': 'Lecturers Management',
+  '/lecturers': 'Lecturers',
   '/reps': 'Class Representatives',
   '/academic': 'Academic Setup',
-  '/account': 'My Account',
+  '/account': 'My Profile',
   '/notifications': 'Notifications',
-  '/venues': 'Lecture Halls & Venues',
-  '/announcements': 'Department Notices',
+  '/venues': 'Lecture Venues',
+  '/announcements': 'Notices',
   '/students-at-risk': 'Students At Risk',
-  '/rollover': 'Academic Year & Rollover',
-  '/privacy': 'Privacy & Location Policy',
-  '/more': 'Department Hub'
+  '/rollover': 'Academic Year',
+  '/privacy': 'Privacy Policy',
+  '/more': 'More Features'
 };
 
 export default function App() {

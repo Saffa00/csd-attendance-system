@@ -391,13 +391,6 @@ export default function Venues() {
         </div>
       )}
 
-      {/* 1. Breadcrumbs */}
-      <div className="flex items-center gap-2 text-xs text-slate-500 font-medium">
-        <Link to="/" className="text-primary hover:underline">Home</Link>
-        <span>›</span>
-        <span className="text-slate-800 font-semibold">Lecture Halls & Venues</span>
-      </div>
-
       {/* 2. Page Header & Context Pills */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-slate-200/80">
         <div>

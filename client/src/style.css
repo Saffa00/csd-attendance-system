@@ -333,13 +333,13 @@ svg.lucide, .lucide { display: inline-block; vertical-align: middle; }
 
 /* Header */
 .main-header {
-  height: 64px;
+  min-height: calc(60px + env(safe-area-inset-top, 0px));
   background: #ffffff;
   border-bottom: 1px solid #e2e8f0;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 20px;
+  padding: env(safe-area-inset-top, 0px) 16px 0 16px;
   position: sticky;
   top: 0;
   z-index: 40;
@@ -348,7 +348,7 @@ svg.lucide, .lucide { display: inline-block; vertical-align: middle; }
 .main-header-left {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   min-width: 0;
 }
 .header-menu-toggle {
@@ -373,24 +373,57 @@ svg.lucide, .lucide { display: inline-block; vertical-align: middle; }
   min-width: 0;
 }
 .main-header-portal-tag {
-  font-size: 9px;
+  font-size: 8.5px;
   font-weight: 800;
-  letter-spacing: 1.1px;
+  letter-spacing: 0.8px;
   color: var(--primary);
+  line-height: 1.2;
 }
 .main-header-page-title {
   margin: 0;
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 700;
   color: var(--text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  line-height: 1.2;
 }
 .main-header-right {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
+  flex-shrink: 0;
+}
+@media (max-width: 640px) {
+  .main-header {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+  .main-header-left {
+    gap: 7px;
+  }
+  .header-mobile-logo {
+    width: 28px;
+    height: 28px;
+  }
+  .main-header-portal-tag {
+    font-size: 8px;
+    letter-spacing: 0.5px;
+  }
+  .main-header-page-title {
+    font-size: 15px;
+    max-width: 150px;
+  }
+  .main-header-right {
+    gap: 6px;
+  }
+  .net .net-text {
+    display: none !important;
+  }
+  .net {
+    padding: 6px 8px !important;
+  }
 }
 .header-bell {
   color: var(--text) !important;
@@ -3455,19 +3488,12 @@ button:disabled {
   gap: 10px;
 }
 
-.hod-breadcrumb {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 13px;
-  color: #64748b;
-  font-weight: 500;
-}
-
-@media (max-width: 899px) {
-  .hod-breadcrumb {
-    display: none !important;
-  }
+.hod-breadcrumb,
+.mod-breadcrumb,
+.more-breadcrumb,
+.breadcrumb,
+.breadcrumbs {
+  display: none !important;
 }
 
 .hod-breadcrumb-link {

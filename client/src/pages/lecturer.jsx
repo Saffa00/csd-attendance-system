@@ -351,13 +351,8 @@ export function LecturerHome() {
 
   return (
     <div className="hod-dashboard">
-      {/* Top Header & Breadcrumb */}
+      {/* Top Header */}
       <div className="hod-dashboard-header">
-        <div className="hod-breadcrumb">
-          <Link to="/" className="hod-breadcrumb-link">Home</Link>
-          <ChevronRight size={14} className="hod-breadcrumb-sep" />
-          <span className="hod-breadcrumb-current">Lecturer Dashboard</span>
-        </div>
 
         <div className="hod-welcome-banner">
           <div className="hod-welcome-left">

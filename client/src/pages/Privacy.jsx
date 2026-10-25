@@ -8,12 +8,6 @@ import {
 export default function Privacy() {
   return (
     <div className="privacy-page-wrapper max-w-7xl mx-auto px-2 sm:px-4 py-4 space-y-6">
-      {/* 1. Breadcrumbs */}
-      <div className="flex items-center gap-2 text-xs text-slate-500 font-medium">
-        <Link to="/" className="text-primary hover:underline">Home</Link>
-        <span>›</span>
-        <span className="text-slate-800 font-semibold">Privacy & Location Policy</span>
-      </div>
 
       {/* 2. Header Hero Card with Graphics */}
       <div className="bg-gradient-to-r from-blue-50/90 via-white to-blue-50/50 rounded-2xl p-6 border border-blue-100 shadow-sm relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6">

@@ -363,13 +363,8 @@ export function HodHome() {
 
   return (
     <div className="hod-dashboard">
-      {/* Top Header & Breadcrumb */}
+      {/* Top Header */}
       <div className="hod-dashboard-header">
-        <div className="hod-breadcrumb">
-          <Link to="/" className="hod-breadcrumb-link">Home</Link>
-          <ChevronRight size={14} className="hod-breadcrumb-sep" />
-          <span className="hod-breadcrumb-current">Dashboard</span>
-        </div>
 
         <div className="hod-welcome-banner">
           <div className="hod-welcome-left">
@@ -1253,48 +1248,81 @@ export function HodStaff({ targetRole }) {
           staff.data.map(p => {
             const courses = (p.lecturer_courses || []).map(lc => lc.courses?.code).filter(Boolean);
             return (
-              <div className="row" key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <Avatar user={p} size={40} />
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <strong>{p.full_name}</strong> <span className="muted">({p.username})</span>
-                  <p className="muted small">
-                    Phone: {p.phone_number} · Level {p.level || '—'} · {p.programme || 'Dept'}
-                    {courses.length > 0 ? ` · Courses: ${courses.join(', ')}` : ''}
-                  </p>
-                  <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginTop: 4 }}>
-                    <span className={p.is_active ? 'badge ok' : 'badge bad'}>{p.is_active ? 'Active' : 'Deactivated'}</span>
-                    <label style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, cursor: 'pointer' }}>
-                      <input
-                        type="checkbox"
-                        checked={p.credentials_sent}
-                        onChange={() => handleToggleSent(p.id, p.credentials_sent)}
-                      />
-                      Credentials sent
-                    </label>
+              <div
+                key={p.id}
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 12,
+                  padding: '14px 16px',
+                  background: '#ffffff',
+                  borderRadius: 12,
+                  border: '1px solid #e2e8f0',
+                  marginBottom: 12,
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.03)'
+                }}
+              >
+                {/* Header row: Avatar, Info, Badges */}
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                  <Avatar user={p} size={44} style={{ flexShrink: 0, marginTop: 2 }} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                      <strong style={{ fontSize: 15, color: '#0f172a' }}>{p.full_name}</strong>
+                      <span className="muted small" style={{ fontWeight: 600 }}>({p.username})</span>
+                      <span className={p.is_active ? 'badge ok' : 'badge bad'} style={{ fontSize: 10, padding: '2px 8px' }}>
+                        {p.is_active ? 'Active' : 'Deactivated'}
+                      </span>
+                    </div>
+
+                    <div style={{ marginTop: 4, fontSize: 12, color: '#475569', lineHeight: 1.5, wordBreak: 'break-word' }}>
+                      <div>Phone: <b style={{ color: '#0f172a' }}>{p.phone_number}</b> · Level {p.level || '—'} · {p.programme || 'Dept'}</div>
+                      {courses.length > 0 && (
+                        <div style={{ marginTop: 2, color: '#2563eb' }}>Courses: <b>{courses.join(', ')}</b></div>
+                      )}
+                    </div>
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-end' }}>
-                  <div style={{ display: 'flex', gap: 6 }}>
+                {/* Footer row: Credentials sent & Action buttons */}
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: 10,
+                  flexWrap: 'wrap',
+                  borderTop: '1px solid #f1f5f9',
+                  paddingTop: 10
+                }}>
+                  <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, cursor: 'pointer', color: '#475569', userSelect: 'none' }}>
+                    <input
+                      type="checkbox"
+                      checked={p.credentials_sent}
+                      onChange={() => handleToggleSent(p.id, p.credentials_sent)}
+                      style={{ width: 16, height: 16, accentColor: '#2563eb' }}
+                    />
+                    <span>Credentials sent</span>
+                  </label>
+
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
                     <button
                       className="secondary compact"
-                      style={{ fontSize: 11, padding: '4px 8px' }}
+                      style={{ fontSize: 11, padding: '6px 10px', minHeight: 32 }}
                       title="Verify and update phone number in person"
                       onClick={() => handleOpenPhoneModal(p)}
                     >
-                      <Edit3 size={12} /> Phone
+                      <Edit3 size={13} /> Phone
                     </button>
                     <button
                       className="secondary compact"
-                      style={{ fontSize: 11, padding: '4px 8px' }}
+                      style={{ fontSize: 11, padding: '6px 10px', minHeight: 32 }}
                       disabled={busy === `reset-${p.id}`}
                       onClick={() => handleReset(p)}
                     >
-                      <RefreshCw size={12} /> Reset Password
+                      <RefreshCw size={13} /> Reset Password
                     </button>
                     <button
                       className={p.is_active ? 'danger compact' : 'secondary compact'}
-                      style={{ fontSize: 11, padding: '4px 8px' }}
+                      style={{ fontSize: 11, padding: '6px 10px', minHeight: 32 }}
                       disabled={busy === `status-${p.id}`}
                       onClick={() => handleToggleStatus(p.id, p.is_active)}
                     >
@@ -1515,20 +1543,49 @@ export function HodStudents() {
         <Panel title="Registered Students">
           {!students.data?.length ? <Empty>No students registered.</Empty> : (
             students.data.map(s => (
-              <div className="row" key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <Avatar user={s} size={40} />
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <strong>{s.full_name}</strong> {s.student_id ? <span className="muted">({s.student_id})</span> : ''}
-                  <p className="muted small">Level {s.level} · {s.programme} · {s.phone_number}</p>
-                  <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
-                    <Badge status={s.account_status}>{STATUS_LABEL[s.account_status]}</Badge>
-                    <span className={s.is_active ? 'badge ok' : 'badge bad'}>{s.is_active ? 'Active' : 'Inactive'}</span>
+              <div
+                key={s.id}
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 10,
+                  padding: '14px 16px',
+                  background: '#ffffff',
+                  borderRadius: 12,
+                  border: '1px solid #e2e8f0',
+                  marginBottom: 10,
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.03)'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                  <Avatar user={s} size={42} style={{ flexShrink: 0, marginTop: 2 }} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                      <strong style={{ fontSize: 15, color: '#0f172a' }}>{s.full_name}</strong>
+                      {s.student_id ? <span className="muted small" style={{ fontWeight: 600 }}>({s.student_id})</span> : ''}
+                      <Badge status={s.account_status}>{STATUS_LABEL[s.account_status]}</Badge>
+                      <span className={s.is_active ? 'badge ok' : 'badge bad'} style={{ fontSize: 10 }}>
+                        {s.is_active ? 'Active' : 'Inactive'}
+                      </span>
+                    </div>
+                    <p className="muted small" style={{ margin: '4px 0 0', lineHeight: 1.4, wordBreak: 'break-word' }}>
+                      Level {s.level} · {s.programme} · Phone: <b style={{ color: '#0f172a' }}>{s.phone_number}</b>
+                    </p>
                   </div>
                 </div>
-                <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'flex-end',
+                  gap: 8,
+                  flexWrap: 'wrap',
+                  borderTop: '1px solid #f1f5f9',
+                  paddingTop: 8
+                }}>
                   <button
                     className="secondary compact"
-                    style={{ fontSize: 11, padding: '4px 8px' }}
+                    style={{ fontSize: 11, padding: '5px 10px', minHeight: 30 }}
                     title="Generate Temporary Password"
                     disabled={busy === `reset-${s.id}`}
                     onClick={() => handleResetPassword(s)}
@@ -1537,7 +1594,7 @@ export function HodStudents() {
                   </button>
                   <button
                     className={s.is_active ? 'danger compact' : 'secondary compact'}
-                    style={{ fontSize: 11, padding: '4px 8px' }}
+                    style={{ fontSize: 11, padding: '5px 10px', minHeight: 30 }}
                     disabled={busy === `toggle-${s.id}`}
                     onClick={() => handleToggleStatus(s.id, s.is_active)}
                   >

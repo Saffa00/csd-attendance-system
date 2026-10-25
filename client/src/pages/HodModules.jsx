@@ -191,18 +191,6 @@ export default function HodModules() {
 
   return (
     <div className="hod-modules-page" style={{ maxWidth: 1100, margin: '0 auto', paddingBottom: 60 }}>
-      {/* Top Breadcrumb Navigation */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: '#64748b', marginBottom: 16 }}>
-        <Link to="/" style={{ color: '#2563eb', textDecoration: 'none' }}>Home</Link>
-        <ChevronRight size={14} color="#94a3b8" />
-        <span style={{ color: showCreate ? '#2563eb' : '#1e293b', fontWeight: showCreate ? 500 : 600 }}>Modules Management</span>
-        {showCreate && (
-          <>
-            <ChevronRight size={14} color="#94a3b8" />
-            <span style={{ color: '#1e293b', fontWeight: 600 }}>{editingId ? 'Edit Module' : 'Add New Module'}</span>
-          </>
-        )}
-      </div>
 
       <ErrorText>{error}</ErrorText>
       <Success>{ok}</Success>
