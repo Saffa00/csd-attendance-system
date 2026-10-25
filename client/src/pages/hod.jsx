@@ -172,15 +172,6 @@ function AttendanceByLevelDonut({ byLevel = [], overallRate = 89 }) {
 // Attendance by Course List
 // -------------------------------------------------------------------
 function AttendanceByCourseList({ courses = [] }) {
-  const fallback = [
-    { code: 'COMS 111', title: 'Introduction to Computer Science', rate: 100 },
-    { code: 'COMS 112', title: 'Structured Programming in C/C++', rate: 92 },
-    { code: 'COMS 113', title: 'Discrete Mathematics & Logic', rate: 88 },
-    { code: 'COMS 114', title: 'Computer Hardware & Digital Electronics', rate: 85 }
-  ];
-
-  const list = courses.length ? courses.slice(0, 4) : fallback;
-
   const getPillClass = r => {
     if (r >= 95) return 'pill-green-dark';
     if (r >= 90) return 'pill-green';
@@ -188,17 +179,25 @@ function AttendanceByCourseList({ courses = [] }) {
     return 'pill-red';
   };
 
+  if (!courses.length) {
+    return (
+      <div style={{ padding: '20px 0', textAlign: 'center', color: '#94a3b8', fontSize: 14 }}>
+        No attendance data yet. Records will appear here once sessions are held.
+      </div>
+    );
+  }
+
   return (
     <div className="hod-course-list">
-      {list.map(c => (
+      {courses.slice(0, 4).map(c => (
         <Link to="/reports" key={c.code} className="hod-course-item">
           <div className="hod-course-info">
             <strong className="hod-course-code">{c.code}</strong>
             <span className="hod-course-title">{c.title}</span>
           </div>
           <div className="hod-course-right">
-            <span className={`hod-course-pill ${getPillClass(c.rate ?? 90)}`}>
-              {c.rate ?? 90}%
+            <span className={`hod-course-pill ${getPillClass(c.rate ?? 0)}`}>
+              {c.rate ?? 0}%
             </span>
             <ChevronRight size={16} className="hod-course-arrow" />
           </div>
@@ -212,22 +211,15 @@ function AttendanceByCourseList({ courses = [] }) {
 // Recent Attendance Records Table
 // -------------------------------------------------------------------
 function RecentAttendanceRecordsTable({ records = [], onViewRecord }) {
-  const fallback = [
-    { id: 'fb-1', index: 1, code: 'COMS 111', level: 'Level 1', lecturer: 'Dr. K. Turay', date: '21 Oct 2025', time: '09:00 AM', status: 'approved', venue: 'Main Lab 1' },
-    { id: 'fb-2', index: 2, code: 'COMS 112', level: 'Level 1', lecturer: 'Prof. J. Ahmed', date: '20 Oct 2025', time: '10:00 AM', status: 'pending', venue: 'LH 3' },
-    { id: 'fb-3', index: 3, code: 'COMS 113', level: 'Level 2', lecturer: 'Dr. M. Bangura', date: '19 Oct 2025', time: '11:00 AM', status: 'approved', venue: 'ICT Center' },
-    { id: 'fb-4', index: 4, code: 'COMS 114', level: 'Level 2', lecturer: 'Dr. S. Conteh', date: '18 Oct 2025', time: '02:00 PM', status: 'rejected', venue: 'Lab 2' }
-  ];
-
-  const rows = records.length ? records.slice(0, 4).map((r, i) => {
+  const rows = records.slice(0, 4).map((r, i) => {
     const entry = r.class_sessions?.timetable_entries;
     const sessionDate = r.class_sessions?.session_date ? new Date(r.class_sessions.session_date) : new Date();
     const subDate = r.submitted_at ? new Date(r.submitted_at) : sessionDate;
     return {
       id: r.id,
       index: i + 1,
-      code: entry?.courses?.code || 'COMS 101',
-      level: `Level ${entry?.level || 1}`,
+      code: entry?.courses?.code || '—',
+      level: `Level ${entry?.level || '—'}`,
       lecturer: entry?.profiles?.full_name || 'Staff Member',
       date: sessionDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }),
       time: subDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }),
@@ -235,7 +227,15 @@ function RecentAttendanceRecordsTable({ records = [], onViewRecord }) {
       venue: entry?.venues?.name || 'Venue TBA',
       review_note: r.review_note
     };
-  }) : fallback;
+  });
+
+  if (!rows.length) {
+    return (
+      <div style={{ padding: '32px 0', textAlign: 'center', color: '#94a3b8', fontSize: 14 }}>
+        No attendance records yet. Records will appear here once students mark attendance.
+      </div>
+    );
+  }
 
   return (
     <>
