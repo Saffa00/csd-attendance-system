@@ -14,6 +14,7 @@ import { ChangePasswordForm } from './Account';
 const ROLE_LABELS = {
   hod: 'Head of Department',
   lecturer: 'Lecturer',
+  class_rep: 'Class Representative',
   student: 'Student'
 };
 
@@ -26,7 +27,7 @@ export default function More() {
   const [showSignOutConfirm, setShowSignOutConfirm] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
 
-  const role = profile?.role || 'student';
+  const role = profile?.role === 'rep' ? 'class_rep' : (profile?.role || 'student');
   const roleLabel = ROLE_LABELS[role] || 'Member';
 
   useEffect(() => {
@@ -70,6 +71,13 @@ export default function More() {
       desc: 'View departmental lecturers, active courses, and credentials',
       icon: Users,
       color: 'bg-blue-50 text-blue-600'
+    },
+    {
+      to: '/reps',
+      label: 'Class Representatives',
+      desc: 'Manage class reps across programmes and study levels',
+      icon: User,
+      color: 'bg-emerald-50 text-emerald-600'
     },
     {
       to: '/students',
@@ -157,6 +165,47 @@ export default function More() {
     }
   ];
 
+  // Remaining Buttons for Class Rep (Not on footer: Home, Timetable, Students, Modules, More)
+  const repButtons = [
+    {
+      to: '/announcements',
+      label: 'Department Notices',
+      desc: 'Department broadcasts, class memos, and official notices',
+      icon: Megaphone,
+      badge: announcementsCount ? `${announcementsCount} Active` : null,
+      color: 'bg-amber-50 text-amber-600'
+    },
+    {
+      to: '/attendance',
+      label: 'Class Attendance Live',
+      desc: 'Monitor live check-in statuses and marked attendance',
+      icon: ClipboardCheck,
+      color: 'bg-emerald-50 text-emerald-600'
+    },
+    {
+      to: '/reports',
+      label: 'Class Attendance Reports',
+      desc: 'Download and export attendance records for your class',
+      icon: FileText,
+      color: 'bg-blue-50 text-blue-600'
+    },
+    {
+      to: '/venues',
+      label: 'Class Venues & GPS',
+      desc: 'View assigned lecture halls and GPS coordinates',
+      icon: MapPin,
+      color: 'bg-purple-50 text-purple-600'
+    },
+    {
+      to: '/notifications',
+      label: 'Notifications Center',
+      desc: 'Class notices, lecture alerts, and attendance approvals',
+      icon: Bell,
+      badge: unread > 0 ? `${unread} Unread` : null,
+      color: 'bg-amber-50 text-amber-600'
+    }
+  ];
+
   // Remaining Buttons for Student (Not on footer: Home, Timetable, Attendance, Modules, More)
   const studentButtons = [
     {
@@ -195,6 +244,8 @@ export default function More() {
     ? hodButtons
     : role === 'lecturer'
     ? lecturerButtons
+    : role === 'class_rep'
+    ? repButtons
     : studentButtons;
 
   return (
@@ -212,6 +263,7 @@ export default function More() {
               <span className={`px-2 py-0.5 rounded-full text-[11px] font-bold ${
                 role === 'hod' ? 'bg-purple-100 text-purple-700' :
                 role === 'lecturer' ? 'bg-blue-100 text-blue-700' :
+                role === 'class_rep' ? 'bg-emerald-100 text-emerald-700' :
                 'bg-slate-100 text-slate-700'
               }`}>
                 {roleLabel}

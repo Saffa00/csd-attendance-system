@@ -426,6 +426,17 @@ export function HodHome() {
           </div>
         </div>
 
+        <div className="hod-metric-card">
+          <div className="hod-stat-icon purple">
+            <UserCheck size={24} />
+          </div>
+          <div className="hod-stat-data">
+            <span className="hod-stat-label">Class Reps</span>
+            <strong className="hod-stat-value">{d?.class_reps || 0}</strong>
+            <span className="hod-stat-trend up">Active in department</span>
+          </div>
+        </div>
+
 
         <div className="hod-metric-card">
           <div className="hod-stat-icon amber">
@@ -513,6 +524,14 @@ export function HodHome() {
                 </div>
               </Link>
 
+              <Link to="/reps" className="hod-action-tile tile-purple">
+                <div className="hod-tile-icon"><UserCheck size={22} /></div>
+                <div className="hod-tile-text">
+                  <strong>Manage Class Reps</strong>
+                  <span>Add or update reps</span>
+                </div>
+              </Link>
+
               <Link to="/reports" className="hod-action-tile tile-orange">
                 <div className="hod-tile-icon"><FileSpreadsheet size={22} /></div>
                 <div className="hod-tile-text">
@@ -543,6 +562,7 @@ export function HodHome() {
                     </p>
                     <div style={{ display: 'flex', gap: 12, marginTop: 4 }}>
                       <Link to="/lecturers" style={{ fontSize: 12, fontWeight: 700, color: '#2563eb' }}>Review Lecturers →</Link>
+                      <Link to="/reps" style={{ fontSize: 12, fontWeight: 700, color: '#2563eb' }}>Review Reps →</Link>
                     </div>
                   </div>
                   <span className="hod-notif-time" style={{ color: '#b45309', fontWeight: 600 }}>Action Required</span>

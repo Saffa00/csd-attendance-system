@@ -17,10 +17,18 @@ const DEFAULT_PAGES = {
     { label: "Attendance Approvals", sub: "Review & approve student submissions", to: "/approvals", category: "PAGE", icon: CheckCircle2 },
     { label: "Venues & GPS", sub: "Lecture halls and GPS geofence", to: "/venues", category: "PAGE", icon: MapPin }
   ],
+  class_rep: [
+    { label: "Class Rep Dashboard", sub: "Overview & class attendance", to: "/", category: "PAGE", icon: Layout },
+    { label: "Mark Class Attendance", sub: "Submit attendance records", to: "/attendance", category: "PAGE", icon: CheckCircle2 },
+    { label: "Class Timetable", sub: "Weekly schedule for your level", to: "/timetable", category: "PAGE", icon: Calendar },
+    { label: "Class Students", sub: "Roster of students in your class", to: "/students", category: "PAGE", icon: Layout },
+    { label: "Venues & Lecture Halls", sub: "Check venue locations", to: "/venues", category: "PAGE", icon: MapPin }
+  ],
   hod: [
     { label: "HOD Dashboard", sub: "Department stats & attendance trends", to: "/", category: "PAGE", icon: Layout },
     { label: "Modules Management", sub: "Create & allocate course modules", to: "/modules", category: "PAGE", icon: BookOpen },
     { label: "Lecturers Directory", sub: "Register and manage lecturers", to: "/lecturers", category: "PAGE", icon: Layout },
+    { label: "Class Representatives", sub: "Assign class reps by programme & level", to: "/reps", category: "PAGE", icon: Layout },
     { label: "Students Directory", sub: "Registered & pending students", to: "/students", category: "PAGE", icon: Layout },
     { label: "Lecture Halls & GPS", sub: "Department venues & geofencing", to: "/venues", category: "PAGE", icon: MapPin },
     { label: "Attendance Records", sub: "Department-wide attendance log", to: "/attendance", category: "PAGE", icon: Clock },

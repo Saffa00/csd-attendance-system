@@ -72,6 +72,7 @@ function triggerDeviceAlert(title, body, tag) {
 const ROLE_LABELS = {
   hod: 'Head of Department',
   lecturer: 'Lecturer',
+  class_rep: 'Class Representative',
   student: 'Student'
 };
 
