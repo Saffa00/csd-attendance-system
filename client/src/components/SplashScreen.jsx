@@ -76,18 +76,6 @@ export default function SplashScreen({ onFinish, minDuration = 2000 }) {
             justifyContent: 'center'
           }}
         >
-          {/* Subtle Royal Blue Glow */}
-          <div
-            style={{
-              position: 'absolute',
-              inset: -14,
-              borderRadius: '50%',
-              background: 'radial-gradient(circle, rgba(37, 99, 235, 0.45) 0%, rgba(29, 78, 216, 0.1) 70%, transparent 100%)',
-              filter: 'blur(16px)',
-              animation: 'pulseGlow 2.5s infinite alternate'
-            }}
-          />
-
           <img
             src="/logo.png"
             alt="Milton Margai Technical University Computer Science Department Logo"
@@ -97,7 +85,6 @@ export default function SplashScreen({ onFinish, minDuration = 2000 }) {
               objectFit: 'contain',
               position: 'relative',
               zIndex: 2,
-              filter: 'drop-shadow(0 8px 20px rgba(0, 0, 0, 0.45))',
               animation: 'logoFadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards'
             }}
           />

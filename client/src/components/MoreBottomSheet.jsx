@@ -20,7 +20,7 @@ export default function MoreBottomSheet({ isOpen, onClose, profile, onSignOut })
   const [pendingStudentCount, setPendingStudentCount] = useState(0);
   const [unreadCount, setUnreadCount] = useState(0);
 
-  const role = profile?.role === 'rep' ? 'class_rep' : (profile?.role || 'student');
+  const role = profile?.role || 'student';
 
   useEffect(() => {
     if (!isOpen) return;
@@ -106,12 +106,6 @@ export default function MoreBottomSheet({ isOpen, onClose, profile, onSignOut })
       color: 'bg-blue-50 text-blue-600'
     },
     {
-      to: '/reps',
-      label: 'Class Representatives',
-      icon: User,
-      color: 'bg-emerald-50 text-emerald-600'
-    },
-    {
       to: '/students',
       label: 'Students Directory',
       icon: GraduationCap,
@@ -192,41 +186,6 @@ export default function MoreBottomSheet({ isOpen, onClose, profile, onSignOut })
     }
   ];
 
-  // Class Rep items (not on footer: Home, Timetable, Students, Notices):
-  const repItems = [
-    {
-      to: '/attendance',
-      label: 'Class Attendance',
-      icon: ClipboardCheck,
-      color: 'bg-emerald-50 text-emerald-600'
-    },
-    {
-      to: '/reports',
-      label: 'Attendance Reports',
-      icon: FileText,
-      color: 'bg-blue-50 text-blue-600'
-    },
-    {
-      to: '/venues',
-      label: 'Venues & GPS',
-      icon: MapPin,
-      color: 'bg-purple-50 text-purple-600'
-    },
-    {
-      to: '/notifications',
-      label: 'Notifications',
-      icon: Bell,
-      badge: unreadCount > 0 ? unreadCount : null,
-      color: 'bg-amber-50 text-amber-600'
-    },
-    {
-      to: '/account',
-      label: 'My Profile',
-      icon: User,
-      color: 'bg-sky-50 text-sky-600'
-    }
-  ];
-
   // Student items (not on footer: Home, Timetable, Attendance, Notices):
   const studentItems = [
     {
@@ -266,8 +225,6 @@ export default function MoreBottomSheet({ isOpen, onClose, profile, onSignOut })
     ? hodItems
     : role === 'lecturer'
     ? lecturerItems
-    : role === 'class_rep'
-    ? repItems
     : studentItems;
 
   const handleItemClick = (path) => {

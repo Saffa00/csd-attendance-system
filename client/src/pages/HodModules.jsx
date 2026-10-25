@@ -76,7 +76,7 @@ export default function HodModules() {
       : ['Computer Science'];
 
     const progType = progs.find(p => ['Degree', 'Diploma', 'HND'].includes(p)) || 'Degree';
-    const courseDisc = progs.find(p => ['Computer Science', 'Business Information Systems', 'BIT', 'Software Engineering'].includes(p))
+    const courseDisc = progs.find(p => ['Computer Science', 'Business Information Systems', 'BIT', 'Software Engineering', 'Telecommunication'].includes(p))
       || (c.programme && !['Degree', 'Diploma', 'HND'].includes(c.programme) ? c.programme : 'Computer Science');
 
     setForm({
@@ -155,6 +155,29 @@ export default function HodModules() {
         method: 'PATCH',
         body: { is_active: !c.is_active }
       });
+      loadData();
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  const deleteModule = async (c, e) => {
+    e.stopPropagation();
+    if (!window.confirm(`Are you sure you want to delete module ${c.code} (${c.title})?`)) return;
+    try {
+      await apiFetch(`/hod/courses/${c.id}`, { method: 'DELETE' });
+      setOk(`Module ${c.code} deleted.`);
+      loadData();
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  const clearAllModules = async () => {
+    if (!window.confirm('Are you sure you want to remove all existing modules? This will delete all department modules so you can add your own fresh.')) return;
+    try {
+      await apiFetch('/hod/courses/clear-all', { method: 'POST' });
+      setOk('All department modules have been cleared.');
       loadData();
     } catch (err) {
       setError(err.message);
@@ -743,22 +766,22 @@ export default function HodModules() {
         <>
           <div style={{
             display: 'flex',
-            justifyContent: 'space-between',
+            justifyContent: 'flex-end',
             alignItems: 'center',
+            gap: 10,
             marginBottom: 20,
-            background: '#ffffff',
-            padding: '16px 20px',
-            borderRadius: 12,
-            border: '1px solid #e2e8f0'
+            flexWrap: 'wrap'
           }}>
-            <div>
-              <h3 style={{ margin: 0, fontSize: 17, fontWeight: 700, color: '#0f172a' }}>
-                Department Modules ({courses.length})
-              </h3>
-              <p style={{ margin: '2px 0 0', fontSize: 12, color: '#64748b' }}>
-                Computer Science Department · 2026/2027 Academic Year
-              </p>
-            </div>
+            {courses.length > 0 && (
+              <button
+                type="button"
+                className="secondary compact"
+                onClick={clearAllModules}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: '#dc2626', borderColor: '#fecaca', background: '#fef2f2' }}
+              >
+                <Trash2 size={15} /> Clear All Modules
+              </button>
+            )}
             <button
               className="primary compact"
               onClick={() => { resetForm(); setShowCreate(true); }}
@@ -859,6 +882,15 @@ export default function HodModules() {
                               style={{ flex: 1, fontSize: 12 }}
                             >
                               {c.is_active ? 'Deactivate' : 'Activate'}
+                            </button>
+                            <button
+                              type="button"
+                              className="secondary compact"
+                              onClick={e => deleteModule(c, e)}
+                              style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '0 8px', color: '#dc2626', borderColor: '#fecaca', background: '#fef2f2' }}
+                              title="Delete module"
+                            >
+                              <Trash2 size={13} />
                             </button>
                           </div>
                         </div>

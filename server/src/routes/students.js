@@ -8,10 +8,10 @@ import { audit, getRepAllocation, decideStudent } from '../services.js';
 
 /**
  * Student registration review + student password reset.
- * Available to the HOD (all students) and class representatives (their own class only).
+ * Available to the HOD (all students).
  */
 const router = Router();
-router.use('/students', authenticate, requirePasswordChanged, allow('hod', 'class_rep', 'rep'));
+router.use('/students', authenticate, requirePasswordChanged, allow('hod'));
 
 const fail = (res, e, status = 400) => res.status(status).json({ error: typeof e === 'string' ? e : e.message });
 
@@ -19,28 +19,16 @@ const fail = (res, e, status = 400) => res.status(status).json({ error: typeof e
 async function manageable(req, id) {
   const { data: s } = await admin.from('profiles').select('*').eq('id', id).eq('role', 'student').maybeSingle();
   if (!s) return { error: 'Student not found', status: 404 };
-  const role = (req.profile?.role || '').toLowerCase();
-  if (role === 'class_rep' || role === 'rep') {
-    const a = await getRepAllocation(req.profile.id);
-    if (a.level && Number(s.level) !== Number(a.level))
-      return { error: 'This student is not in your class', status: 403 };
-    if (a.programme && s.programme && a.programme.toLowerCase() !== s.programme.toLowerCase())
-      return { error: 'This student is not in your class', status: 403 };
-  }
   return { student: s };
 }
 
 router.get('/students/pending', async (req, res) => {
   try {
-    let q = admin.from('profiles').select('id,student_id,full_name,phone_number,programme,level,created_at')
-      .eq('role', 'student').eq('account_status', 'pending').order('created_at');
-    const role = (req.profile?.role || '').toLowerCase();
-    if (role === 'class_rep' || role === 'rep') {
-      const a = await getRepAllocation(req.profile.id);
-      if (a.level) q = q.eq('level', a.level);
-      if (a.programme) q = q.ilike('programme', a.programme);
-    }
-    const { data, error } = await q;
+    const { data, error } = await admin.from('profiles')
+      .select('id,student_id,full_name,phone_number,programme,level,created_at')
+      .eq('role', 'student')
+      .eq('account_status', 'pending')
+      .order('created_at');
     if (error) return fail(res, error);
     res.json(data);
   } catch (e) { fail(res, e, e.status || 400); }
@@ -59,16 +47,9 @@ router.patch('/students/:id/decision', async (req, res) => {
 // List pending student password reset requests
 router.get('/students/reset-requests', async (req, res) => {
   try {
-    let q = admin.from('profiles')
+    const { data: students, error } = await admin.from('profiles')
       .select('id,auth_user_id,student_id,full_name,phone_number,programme,level,created_at')
       .eq('role', 'student');
-    const role = (req.profile?.role || '').toLowerCase();
-    if (role === 'class_rep' || role === 'rep') {
-      const a = await getRepAllocation(req.profile.id);
-      if (a.level) q = q.eq('level', a.level);
-      if (a.programme) q = q.ilike('programme', a.programme);
-    }
-    const { data: students, error } = await q;
     if (error) return fail(res, error);
 
     const pending = [];

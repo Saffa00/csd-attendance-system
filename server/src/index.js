@@ -6,7 +6,6 @@ import helmet from 'helmet';
 import authRoutes from './routes/auth.js';
 import hodRoutes from './routes/hod.js';
 import studentAdminRoutes from './routes/students.js';
-import repRoutes from './routes/rep.js';
 import lecturerRoutes from './routes/lecturer.js';
 import studentRoutes from './routes/student.js';
 import attendanceRoutes from './routes/attendance.js';
@@ -50,7 +49,7 @@ app.get('/', (_, res) => res.json({
   docs: 'Use /api routes for departmental requests'
 }));
 app.get('/health', (_, res) => res.json({ ok: true, status: 'healthy', timestamp: new Date().toISOString() }));
-app.use('/api', authRoutes, hodRoutes, studentAdminRoutes, repRoutes, lecturerRoutes, studentRoutes, attendanceRoutes, reportRoutes, commonRoutes, venuesRoutes, announcementsRoutes, excusesRoutes, profileRoutes);
+app.use('/api', authRoutes, hodRoutes, studentAdminRoutes, lecturerRoutes, studentRoutes, attendanceRoutes, reportRoutes, commonRoutes, venuesRoutes, announcementsRoutes, excusesRoutes, profileRoutes);
 app.use('/api', (req, res) => res.status(404).json({ error: 'Not found' }));
 app.use((err, req, res, next) => {
   console.error('API error:', err.message);   // never log request bodies (they can contain passwords)

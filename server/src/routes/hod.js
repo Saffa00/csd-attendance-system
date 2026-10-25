@@ -665,7 +665,7 @@ router.patch('/hod/courses/:id', async (req, res) => {
 router.patch('/hod/students/:id', async (req, res) => {
   const updateSchema = z.object({
     level: z.coerce.number().int().min(1).max(4).optional(),
-    programme: z.enum(['Computer Science', 'BIT', 'Software Engineering']).optional(),
+    programme: z.enum(['Computer Science', 'BIT', 'Business Information Systems', 'Software Engineering', 'Telecommunication']).optional(),
     full_name: z.string().trim().min(2).max(100).optional(),
     student_id: z.string().trim().max(30).optional(),
     is_active: z.boolean().optional()
@@ -686,10 +686,40 @@ router.patch('/hod/students/:id', async (req, res) => {
 });
 
 router.delete('/hod/courses/:id', async (req, res) => {
-  const { error } = await admin.from('courses').delete().eq('id', req.params.id);
-  if (error) return fail(res, error);
-  await audit(req.profile.id, 'course', req.params.id, 'deleted');
-  res.json({ ok: true });
+  const courseId = req.params.id;
+  try {
+    await admin.from('module_programmes').delete().eq('course_id', courseId);
+    await admin.from('lecturer_courses').delete().eq('course_id', courseId);
+    await admin.from('course_registrations').delete().eq('course_id', courseId);
+    await admin.from('timetable_entries').delete().eq('course_id', courseId);
+    await admin.from('class_reps').delete().eq('course_id', courseId);
+    await admin.from('announcements').update({ target_course_id: null }).eq('target_course_id', courseId);
+
+    const { error } = await admin.from('courses').delete().eq('id', courseId);
+    if (error) return fail(res, error);
+    await audit(req.profile.id, 'course', courseId, 'deleted');
+    res.json({ ok: true });
+  } catch (err) {
+    fail(res, err);
+  }
+});
+
+router.post('/hod/courses/clear-all', async (req, res) => {
+  try {
+    await admin.from('module_programmes').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+    await admin.from('lecturer_courses').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+    await admin.from('course_registrations').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+    await admin.from('timetable_entries').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+    await admin.from('class_reps').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+    await admin.from('announcements').update({ target_course_id: null }).neq('id', '00000000-0000-0000-0000-000000000000');
+
+    const { error } = await admin.from('courses').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+    if (error) return fail(res, error);
+    await audit(req.profile.id, 'courses', null, 'cleared_all');
+    res.json({ ok: true, message: 'All department modules cleared successfully.' });
+  } catch (err) {
+    fail(res, err);
+  }
 });
 
 const venueBody = z.object({ name: z.string().trim().min(2).max(100), latitude: z.coerce.number().min(-90).max(90), longitude: z.coerce.number().min(-180).max(180), radius_m: z.coerce.number().int().min(10).max(2000) });

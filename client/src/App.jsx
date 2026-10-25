@@ -26,9 +26,6 @@ import { StudentHome, StudentTimetable, StudentAttendance, StudentHistory, Stude
 // Lecturer components
 import { LecturerHome, LecturerCourses, LecturerSessions, LecturerApprovals, LecturerReports } from './pages/lecturer';
 
-// Class Rep components
-import { RepHome, RepTimetable, RepStudents, RepAttendance } from './pages/rep';
-
 // HOD components
 import { HodHome, HodStaff, HodStudents, HodAttendance, HodReports, HodAcademic } from './pages/hod';
 import HodModules from './pages/HodModules';
@@ -47,13 +44,6 @@ const NAV_CONFIG = {
     { label: 'Home', icon: Home, to: '/' },
     { label: 'Sessions', icon: CalendarDays, to: '/sessions' },
     { label: 'Approvals', icon: ClipboardCheck, to: '/approvals' },
-    { label: 'Notices', icon: Megaphone, to: '/announcements' },
-    { label: 'More', icon: MoreHorizontal, to: '/more' }
-  ],
-  class_rep: [
-    { label: 'Home', icon: Home, to: '/' },
-    { label: 'Timetable', icon: CalendarDays, to: '/timetable' },
-    { label: 'Students', icon: Users, to: '/students' },
     { label: 'Notices', icon: Megaphone, to: '/announcements' },
     { label: 'More', icon: MoreHorizontal, to: '/more' }
   ],
@@ -122,33 +112,6 @@ const SIDEBAR_CONFIG = {
       ]
     }
   ],
-  class_rep: [
-    {
-      group: 'Class Management',
-      items: [
-        { label: 'Dashboard', icon: Home, to: '/' },
-        { label: 'Class Timetable', icon: CalendarDays, to: '/timetable' },
-        { label: 'Class Students', icon: Users, to: '/students' },
-        { label: 'Class Attendance', icon: ClipboardCheck, to: '/attendance' },
-        { label: 'Reports & Export', icon: FileText, to: '/reports' }
-      ]
-    },
-    {
-      group: 'Campus & Notices',
-      items: [
-        { label: 'Department Notices', icon: Megaphone, to: '/announcements' },
-        { label: 'Class Venues & GPS', icon: MapPin, to: '/venues' },
-        { label: 'Department Hub', icon: MoreHorizontal, to: '/more' }
-      ]
-    },
-    {
-      group: 'Account',
-      items: [
-        { label: 'My Account & Avatar', icon: User, to: '/account' },
-        { label: 'Privacy Notice', icon: Shield, to: '/privacy' }
-      ]
-    }
-  ],
   hod: [
     {
       group: 'Overview',
@@ -163,7 +126,6 @@ const SIDEBAR_CONFIG = {
       group: 'People & Modules',
       items: [
         { label: 'Lecturers', icon: Users, to: '/lecturers' },
-        { label: 'Class Representatives', icon: User, to: '/reps' },
         { label: 'Students Directory', icon: Users, to: '/students' },
         { label: 'Modules Management', icon: BookOpen, to: '/modules' },
         { label: 'Venues & GPS Radius', icon: MapPin, to: '/venues' }
@@ -201,7 +163,6 @@ const TITLES = {
   '/reports': 'Reports & Export',
   '/students': 'Students',
   '/lecturers': 'Lecturers',
-  '/reps': 'Class Representatives',
   '/academic': 'Academic Setup',
   '/account': 'My Profile',
   '/notifications': 'Notifications',
@@ -241,7 +202,7 @@ export default function App() {
     return <ForcedPasswordChange />;
   }
 
-  const roleKey = profile.role === 'rep' ? 'class_rep' : profile.role;
+  const roleKey = profile.role;
   const roleNav = NAV_CONFIG[roleKey] || NAV_CONFIG.student;
   const roleSidebar = SIDEBAR_CONFIG[roleKey] || SIDEBAR_CONFIG.student;
 
@@ -270,25 +231,12 @@ export default function App() {
           </>
         )}
 
-        {/* Class Representative Routes */}
-        {(profile.role === 'class_rep' || profile.role === 'rep') && (
-          <>
-            <Route path="/" element={<RepHome />} />
-            <Route path="/timetable" element={<RepTimetable />} />
-            <Route path="/students" element={<RepStudents />} />
-            <Route path="/attendance" element={<RepAttendance />} />
-            <Route path="/reports" element={<LecturerReports />} />
-            <Route path="/profile" element={<Account />} />
-          </>
-        )}
-
         {/* HOD Routes */}
         {profile.role === 'hod' && (
           <>
             <Route path="/" element={<HodHome />} />
             <Route path="/modules" element={<HodModules />} />
             <Route path="/lecturers" element={<HodStaff targetRole="lecturer" />} />
-            <Route path="/reps" element={<HodStaff targetRole="class_rep" />} />
             <Route path="/students" element={<HodStudents />} />
             <Route path="/attendance" element={<HodAttendance />} />
             <Route path="/reports" element={<HodReports />} />

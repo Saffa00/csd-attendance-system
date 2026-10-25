@@ -8,33 +8,24 @@ const DEFAULT_PAGES = {
     { label: "Today's Timetable", sub: "Class schedule & timetable", to: "/timetable", category: "PAGE", icon: Calendar },
     { label: "Mark Attendance", sub: "Enter class code & mark present", to: "/attendance", category: "PAGE", icon: CheckCircle2 },
     { label: "Attendance History", sub: "View past records & appeal status", to: "/history", category: "PAGE", icon: Clock },
-    { label: "Registered Modules", sub: "Department modules for your level", to: "/modules", category: "PAGE", icon: BookOpen },
     { label: "Student Dashboard", sub: "Main student overview & ring", to: "/", category: "PAGE", icon: Layout },
     { label: "Account & Profile", sub: "Student ID and personal details", to: "/account", category: "PAGE", icon: Layout }
   ],
   lecturer: [
     { label: "Lecturer Dashboard", sub: "Active class status & overview", to: "/", category: "PAGE", icon: Layout },
     { label: "Class Sessions", sub: "Open 6-digit code for class attendance", to: "/sessions", category: "PAGE", icon: Clock },
-    { label: "Attendance Review", sub: "Review & approve student submissions", to: "/review", category: "PAGE", icon: CheckCircle2 },
-    { label: "Teaching Modules", sub: "Assigned course modules", to: "/modules", category: "PAGE", icon: BookOpen },
+    { label: "Attendance Approvals", sub: "Review & approve student submissions", to: "/approvals", category: "PAGE", icon: CheckCircle2 },
     { label: "Venues & GPS", sub: "Lecture halls and GPS geofence", to: "/venues", category: "PAGE", icon: MapPin }
-  ],
-  class_rep: [
-    { label: "Class Rep Dashboard", sub: "Overview & class attendance", to: "/", category: "PAGE", icon: Layout },
-    { label: "Mark Class Attendance", sub: "Submit attendance records", to: "/attendance", category: "PAGE", icon: CheckCircle2 },
-    { label: "Class Timetable", sub: "Weekly schedule for your level", to: "/timetable", category: "PAGE", icon: Calendar },
-    { label: "Venues & Lecture Halls", sub: "Check venue locations", to: "/venues", category: "PAGE", icon: MapPin }
   ],
   hod: [
     { label: "HOD Dashboard", sub: "Department stats & attendance trends", to: "/", category: "PAGE", icon: Layout },
-    { label: "Modules Management", sub: "Create & allocate course modules", to: "/courses", category: "PAGE", icon: BookOpen },
-    { label: "Lecturers Directory", sub: "Register and manage lecturers", to: "/staff", category: "PAGE", icon: Layout },
-    { label: "Class Representatives", sub: "Assign class reps by programme & level", to: "/reps", category: "PAGE", icon: Layout },
+    { label: "Modules Management", sub: "Create & allocate course modules", to: "/modules", category: "PAGE", icon: BookOpen },
+    { label: "Lecturers Directory", sub: "Register and manage lecturers", to: "/lecturers", category: "PAGE", icon: Layout },
     { label: "Students Directory", sub: "Registered & pending students", to: "/students", category: "PAGE", icon: Layout },
     { label: "Lecture Halls & GPS", sub: "Department venues & geofencing", to: "/venues", category: "PAGE", icon: MapPin },
     { label: "Attendance Records", sub: "Department-wide attendance log", to: "/attendance", category: "PAGE", icon: Clock },
     { label: "Reports & Exports", sub: "Download attendance reports", to: "/reports", category: "PAGE", icon: Layout },
-    { label: "Department Settings", sub: "Thresholds, rollover & non-teaching days", to: "/settings", category: "PAGE", icon: Layout }
+    { label: "Department Settings", sub: "Thresholds, rollover & academic setup", to: "/academic", category: "PAGE", icon: Layout }
   ]
 };
 
@@ -48,7 +39,8 @@ const DEFAULT_MODULES = [
   { code: 'COMS 213', title: 'Object-Oriented Software Engineering', level: 2, to: '/modules' },
   { code: 'COMS 214', title: 'Computer Networks & Data Communications', level: 2, to: '/modules' },
   { code: 'BIT 111', title: 'Business Information Systems Fundamentals', level: 1, to: '/modules' },
-  { code: 'SE 111', title: 'Software Engineering Principles', level: 1, to: '/modules' }
+  { code: 'SE 111', title: 'Software Engineering Principles', level: 1, to: '/modules' },
+  { code: 'TELE 111', title: 'Introduction to Telecommunication Systems', level: 1, to: '/modules' }
 ];
 
 const VENUES = [

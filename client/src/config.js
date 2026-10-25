@@ -13,7 +13,8 @@ export const PROGRAMME_TYPES = [
 export const DEPT_COURSES = [
   'Computer Science',
   'Business Information Systems',
-  'Software Engineering'
+  'Software Engineering',
+  'Telecommunication'
 ];
 
 export const PROGRAMMES = [
@@ -23,7 +24,8 @@ export const PROGRAMMES = [
   'Computer Science',
   'BIT',
   'Business Information Systems',
-  'Software Engineering'
+  'Software Engineering',
+  'Telecommunication'
 ];
 
 export const PROGRAMME_LABELS = {
@@ -33,7 +35,8 @@ export const PROGRAMME_LABELS = {
   'Computer Science': 'Computer Science',
   'BIT': 'Business Information Systems',
   'Business Information Systems': 'Business Information Systems',
-  'Software Engineering': 'Software Engineering'
+  'Software Engineering': 'Software Engineering',
+  'Telecommunication': 'Telecommunication'
 };
 
 export const PROGRAMME_DURATIONS = {
@@ -43,7 +46,8 @@ export const PROGRAMME_DURATIONS = {
   'Computer Science': 4,
   'BIT': 4,
   'Business Information Systems': 4,
-  'Software Engineering': 4
+  'Software Engineering': 4,
+  'Telecommunication': 4
 };
 
 export const getLevelsForProgramme = (programme) => {

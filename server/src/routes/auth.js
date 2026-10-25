@@ -294,10 +294,9 @@ router.post('/auth/register', registerLimit, async (req, res) => {
         await admin.from('student_list').update({ is_claimed: true, claimed_by: profile.id }).eq('id', listed.id);
         await registerCoursesFor(profile);
       } else {
-        // Tell the class rep(s) of this level/programme and the HOD about the pending registration
-        const { data: reps } = await admin.from('class_reps').select('rep_id').eq('level', profile.level).eq('programme', profile.programme);
+        // Tell the HOD about the pending registration
         const { data: hods } = await admin.from('profiles').select('id').eq('role', 'hod').eq('is_active', true);
-        await notify([...(reps || []).map(r => r.rep_id), ...(hods || []).map(h => h.id)],
+        await notify((hods || []).map(h => h.id),
           'New student registration awaiting approval', `${profile.full_name} (Level ${profile.level}) has registered and is waiting for your approval.`);
       }
       await audit(profile.id, 'profile', profile.id, listed ? 'student_registered_auto_approved' : 'student_registered_pending');
@@ -309,7 +308,7 @@ router.post('/auth/register', registerLimit, async (req, res) => {
       status: profile.account_status,
       message: listed
         ? 'Registration complete and approved. Save your recovery code below.'
-        : 'Registration submitted. Your class representative or HOD will review and approve your account. Save your recovery code below.',
+        : 'Registration submitted. The Head of Department (HOD) will review and approve your account. Save your recovery code below.',
       recovery_code: recoveryCode,
       student_name: profile.full_name,
       student_id: profile.student_id || profile.phone_number
@@ -389,7 +388,7 @@ router.post('/auth/forgot-password', async (req, res) => {
   const normalisedStaffId = id.toUpperCase().replace(/^([A-Z]+)\s*[-_]?\s*(\d+)$/, '$1-$2');
   if (STAFF_USERNAME.test(id) || STAFF_USERNAME.test(normalisedStaffId)) {
     return res.status(400).json({
-      error: 'Lecturers and Class Representatives must request password reset using their Staff Username and registered Phone Number. Recovery codes are for students only.'
+      error: 'Lecturers must request password reset using their Staff Username and registered Phone Number. Recovery codes are for students only.'
     });
   }
 
@@ -397,9 +396,9 @@ router.post('/auth/forgot-password', async (req, res) => {
   if (id.includes('@')) {
     const { data: p } = await admin.from('profiles').select('id,email,full_name,role').ilike('email', id).maybeSingle();
     if (p?.email) {
-      if (p.role === 'lecturer' || p.role === 'class_rep') {
+      if (p.role === 'lecturer') {
         return res.status(400).json({
-          error: 'Staff members must request a password reset with their username and registered phone number for HOD approval.'
+          error: 'Lecturers must request a password reset with their username and registered phone number for HOD approval.'
         });
       }
       try {
@@ -425,23 +424,22 @@ router.post('/auth/forgot-password', async (req, res) => {
         }
       });
     }
-    const { data: reps } = await admin.from('class_reps').select('rep_id').eq('level', student.level);
     const { data: hods } = await admin.from('profiles').select('id').eq('role', 'hod').eq('is_active', true);
     await notify(
-      [...(reps || []).map(r => r.rep_id), ...(hods || []).map(h => h.id)],
+      (hods || []).map(h => h.id),
       'Password Reset Request',
       `Student ${student.full_name} (${student.student_id ? 'ID: ' + student.student_id : 'Level ' + student.level}) requested a password reset. You can generate a temporary password in your portal.`
     );
     return res.json({
-      message: `Password reset request submitted for ${student.full_name}. Please contact your Class Representative or HOD who can generate your temporary password.`
+      message: `Password reset request submitted for ${student.full_name}. Please contact the HOD who can generate your temporary password.`
     });
   }
 
   res.json({ message: 'If an account matches your details, password reset instructions have been dispatched.' });
 });
 
-// ------------------------------------------------------------------ STAFF FORGOT PASSWORD (LECTURER & CLASS REP)
-// Lecturers and class representatives request a reset using their username and phone number.
+// ------------------------------------------------------------------ STAFF FORGOT PASSWORD (LECTURER)
+// Lecturers request a reset using their username and phone number.
 // Only the HOD can approve these requests. Recovery codes are for students only.
 router.post('/auth/staff-forgot-password', passwordLimit, async (req, res) => {
   const schema = z.object({
@@ -459,12 +457,12 @@ router.post('/auth/staff-forgot-password', passwordLimit, async (req, res) => {
   const { data: p, error: pErr } = await admin.from('profiles')
     .select('id,auth_user_id,username,full_name,role,phone_number,is_active')
     .ilike('username', cleanUsername)
-    .in('role', ['lecturer', 'class_rep'])
+    .in('role', ['lecturer'])
     .maybeSingle();
 
   if (pErr || !p) {
     return res.status(404).json({
-      error: `No lecturer or class representative account found with username "${username}". Note: Recovery codes are for students only.`
+      error: `No lecturer account found with username "${username}". Note: Recovery codes are for students only.`
     });
   }
 
