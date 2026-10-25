@@ -754,116 +754,165 @@ async function loadReport(req) {
 }
 
 // =========================================================================
-// A4 PDF BUILDER (PDFKit)
+// A4 PDF BUILDER (PDFKit) - UNIQUE INSTITUTIONAL FORMAT
 // =========================================================================
 function buildPdfDocument(report, res) {
   const { meta, settings, summary, columns, rows } = report;
   const isLandscape = columns.length > 8;
 
-  // A4 Page size in points: 595.28 x 841.89
-  // 20 mm margins = 56.7 points
-  const marginPt = 56.7;
+  // Exact A4 dimensions in points:
+  // Portrait:  595.28 x 841.89 pt (210 x 297 mm)
+  // Landscape: 841.89 x 595.28 pt (297 x 210 mm)
   const pageWidth = isLandscape ? 841.89 : 595.28;
   const pageHeight = isLandscape ? 595.28 : 841.89;
+  const marginPt = 40; // 14mm margins for clean printable layout
   const contentWidth = pageWidth - (2 * marginPt);
+  const maxTableBottom = pageHeight - marginPt - 42; // Leave space for footer
+  const rowHeight = 18;
+  const tableHeaderHeight = 22;
+
+  // Generate unique document reference code
+  const dateObj = new Date(meta.generated_at || Date.now());
+  const yearStr = dateObj.getFullYear();
+  const docRef = `MMTU-CS-ATT-${yearStr}-${Math.abs((meta.title || 'REP').split('').reduce((a, b) => (((a << 5) - a) + b.charCodeAt(0)) | 0, 0)).toString(36).toUpperCase().padStart(4, '0')}`;
 
   const doc = new PDFDocument({
     size: isLandscape ? [841.89, 595.28] : [595.28, 841.89],
     margins: { top: marginPt, bottom: marginPt, left: marginPt, right: marginPt },
-    bufferPages: true
+    bufferPages: true,
+    autoFirstPage: true
   });
   doc.pipe(res);
 
-  // Helper: Draw header on Page 1
-  const drawPage1Header = () => {
-    // Logo
-    try {
-      if (settings.logo_data && settings.logo_data.startsWith('data:image')) {
-        const base64Data = settings.logo_data.replace(/^data:image\/\w+;base64,/, '');
-        const imgBuffer = Buffer.from(base64Data, 'base64');
-        doc.image(imgBuffer, (pageWidth - 60) / 2, doc.y, { height: 60 });
-        doc.y += 66;
-      } else if (fs.existsSync(DEFAULT_LOGO_PATH)) {
-        doc.image(DEFAULT_LOGO_PATH, (pageWidth - 60) / 2, doc.y, { height: 60 });
-        doc.y += 66;
-      }
-    } catch (_) {}
-
-    // University & Department Titles
-    doc.font('Helvetica-Bold').fontSize(14).fillColor('#102a43').text(settings.university_name, { align: 'center' });
-    doc.font('Helvetica').fontSize(10.5).fillColor('#486581').text(settings.department_name, { align: 'center' });
-    doc.moveDown(0.4);
-
-    // Horizontal Divider
-    doc.moveTo(marginPt, doc.y).lineTo(pageWidth - marginPt, doc.y).strokeColor('#9fb3c8').lineWidth(1).stroke();
-    doc.moveDown(0.6);
-
-    // Centered Title Block
-    doc.font('Helvetica-Bold').fontSize(13).fillColor('#102a43').text(meta.title, { align: 'center' });
-    doc.font('Helvetica').fontSize(8.5).fillColor('#627d98').text(meta.filter_summary, { align: 'center' });
-    doc.moveDown(0.8);
-
-    // Summary Cards (4 rectangular boxes)
-    const gap = 10;
-    const boxW = (contentWidth - (3 * gap)) / 4;
-    const boxH = 40;
-    const by = doc.y;
-
-    const cards = [
-      { val: summary.total_students, lbl: 'Students' },
-      { val: summary.sessions_held, lbl: 'Sessions held' },
-      { val: `${summary.average_attendance}%`, lbl: 'Average attendance' },
-      { val: summary.below_minimum, lbl: `Below ${settings.min_attendance_threshold}% minimum` }
-    ];
-
-    cards.forEach((c, idx) => {
-      const bx = marginPt + idx * (boxW + gap);
-      doc.roundedRect(bx, by, boxW, boxH, 4).strokeColor('#d9e2ec').lineWidth(1).stroke();
-      doc.font('Helvetica-Bold').fontSize(13).fillColor('#102a43').text(String(c.val), bx, by + 6, { width: boxW, align: 'center' });
-      doc.font('Helvetica').fontSize(7.5).fillColor('#627d98').text(c.lbl, bx, by + 23, { width: boxW, align: 'center' });
-    });
-
-    doc.y = by + boxH + 16;
+  // Helper: Draw running continuation header on Page 2+
+  const drawContinuationHeader = (pageNum) => {
+    const y = marginPt;
+    doc.font('Helvetica-Bold').fontSize(8.5).fillColor('#0f2744')
+      .text((settings.university_name || 'MILTON MARGAI TECHNICAL UNIVERSITY').toUpperCase(), marginPt, y, { lineBreak: false });
+    doc.font('Helvetica').fontSize(7.5).fillColor('#64748b')
+      .text(`${settings.department_name || 'Department of Computer Science'} · ${meta.title} (Continued) · Ref: ${docRef}`, marginPt, y + 11, { lineBreak: false });
+    
+    // Header divider line
+    doc.moveTo(marginPt, y + 23).lineTo(pageWidth - marginPt, y + 23).strokeColor('#cbd5e1').lineWidth(0.75).stroke();
+    return y + 28;
   };
 
-  // Helper: Draw repeating Table Header
+  // Helper: Draw Table Header (Navy bar with white text)
   const drawTableHeader = y => {
-    doc.rect(marginPt, y, contentWidth, 20).fill('#f0f4f8');
-    doc.moveTo(marginPt, y + 20).lineTo(marginPt + contentWidth, y + 20).strokeColor('#94a3b8').lineWidth(1).stroke();
+    // Navy header bar
+    doc.rect(marginPt, y, contentWidth, tableHeaderHeight).fill('#0f2744');
+    doc.moveTo(marginPt, y + tableHeaderHeight).lineTo(marginPt + contentWidth, y + tableHeaderHeight).strokeColor('#0a1b2f').lineWidth(1).stroke();
 
     let curX = marginPt;
-    doc.font('Helvetica-Bold').fontSize(8).fillColor('#102a43');
+    doc.font('Helvetica-Bold').fontSize(8).fillColor('#ffffff');
     columns.forEach(col => {
       const colW = (contentWidth * col.widthPct) / 100;
-      doc.text(col.label, curX + 3, y + 5, {
-        width: colW - 6,
+      doc.text(col.label, curX + 4, y + 6, {
+        width: colW - 8,
         align: col.align || 'left',
         lineBreak: false
       });
       curX += colW;
     });
-    return y + 20;
+    return y + tableHeaderHeight;
   };
 
-  // Page 1 header & summary
-  drawPage1Header();
+  // Helper: Draw Page 1 Institution Header & Summary
+  const drawPage1Header = () => {
+    let startY = marginPt;
 
-  // Draw Table
-  let currentY = drawTableHeader(doc.y);
-  const rowHeight = 18;
+    // Logo (Centered, 48pt height)
+    try {
+      if (settings.logo_data && settings.logo_data.startsWith('data:image')) {
+        const base64Data = settings.logo_data.replace(/^data:image\/\w+;base64,/, '');
+        const imgBuffer = Buffer.from(base64Data, 'base64');
+        doc.image(imgBuffer, (pageWidth - 48) / 2, startY, { height: 48 });
+        startY += 54;
+      } else if (fs.existsSync(DEFAULT_LOGO_PATH)) {
+        doc.image(DEFAULT_LOGO_PATH, (pageWidth - 48) / 2, startY, { height: 48 });
+        startY += 54;
+      }
+    } catch (_) {}
 
+    // University & Faculty / Department Titles
+    doc.font('Helvetica-Bold').fontSize(13.5).fillColor('#0f2744')
+      .text((settings.university_name || 'MILTON MARGAI TECHNICAL UNIVERSITY').toUpperCase(), marginPt, startY, { align: 'center' });
+    startY += 17;
+
+    doc.font('Helvetica-Bold').fontSize(8.5).fillColor('#334155')
+      .text(`FACULTY OF ENGINEERING & TECHNOLOGY · ${(settings.department_name || 'DEPARTMENT OF COMPUTER SCIENCE').toUpperCase()}`, marginPt, startY, { align: 'center' });
+    startY += 14;
+
+    // Security & Verification Metadata Bar
+    doc.roundedRect(marginPt, startY, contentWidth, 18, 4).fill('#f1f5f9');
+    doc.roundedRect(marginPt, startY, contentWidth, 18, 4).strokeColor('#cbd5e1').lineWidth(0.5).stroke();
+    doc.font('Helvetica-Bold').fontSize(7.5).fillColor('#1e40af')
+      .text(`REF: ${docRef}`, marginPt + 8, startY + 5, { lineBreak: false });
+    doc.font('Helvetica-Bold').fontSize(7.5).fillColor('#059669')
+      .text('VERIFIED ACADEMIC AUDIT', marginPt, startY + 5, { width: contentWidth, align: 'center', lineBreak: false });
+    doc.font('Helvetica').fontSize(7.5).fillColor('#475569')
+      .text(`ISSUED: ${fmtDate(meta.generated_at)}`, pageWidth - marginPt - 130, startY + 5, { width: 122, align: 'right', lineBreak: false });
+    startY += 26;
+
+    // Report Title & Filter Summary
+    doc.font('Helvetica-Bold').fontSize(13).fillColor('#0f2744')
+      .text(meta.title, marginPt, startY, { align: 'center' });
+    startY += 16;
+
+    doc.font('Helvetica').fontSize(8.5).fillColor('#64748b')
+      .text(meta.filter_summary, marginPt, startY, { align: 'center' });
+    startY += 14;
+
+    // Horizontal Accent Line
+    doc.moveTo(marginPt, startY).lineTo(pageWidth - marginPt, startY).strokeColor('#e2e8f0').lineWidth(1).stroke();
+    startY += 10;
+
+    // 4 Top Metric Summary Cards
+    const gap = 10;
+    const boxW = (contentWidth - (3 * gap)) / 4;
+    const boxH = 40;
+
+    const cards = [
+      { val: summary.total_students, lbl: 'STUDENTS', sub: 'Enrolled in cohort' },
+      { val: summary.sessions_held, lbl: 'SESSIONS HELD', sub: 'Conducted lectures' },
+      { val: `${summary.average_attendance}%`, lbl: 'AVG ATTENDANCE', sub: `Benchmark: ${settings.min_attendance_threshold}%` },
+      { val: summary.below_minimum, lbl: 'BELOW MINIMUM', sub: 'Deficient attendance', isAlert: (summary.below_minimum || 0) > 0 }
+    ];
+
+    cards.forEach((c, idx) => {
+      const bx = marginPt + idx * (boxW + gap);
+      doc.roundedRect(bx, startY, boxW, boxH, 5).fill('#f8fafc');
+      doc.roundedRect(bx, startY, boxW, boxH, 5).strokeColor(c.isAlert ? '#fca5a5' : '#cbd5e1').lineWidth(0.75).stroke();
+      doc.font('Helvetica-Bold').fontSize(13).fillColor(c.isAlert ? '#dc2626' : '#0f2744')
+        .text(String(c.val), bx, startY + 6, { width: boxW, align: 'center' });
+      doc.font('Helvetica-Bold').fontSize(6.5).fillColor('#64748b')
+        .text(c.lbl, bx, startY + 22, { width: boxW, align: 'center' });
+    });
+
+    return startY + boxH + 16;
+  };
+
+  // Draw Page 1 header and summary cards
+  let currentY = drawPage1Header();
+
+  // Draw initial Table Header on Page 1
+  currentY = drawTableHeader(currentY);
+
+  // Draw Table Rows one page at a time
   rows.forEach((row, rIdx) => {
-    // Check if new page is needed (reserving 50pt bottom margin for safety)
-    if (currentY + rowHeight > pageHeight - marginPt - 40) {
+    // When Page 1 (or current page) is full with table rows, allow the next page to start!
+    if (currentY + rowHeight > maxTableBottom) {
       doc.addPage();
-      currentY = drawTableHeader(marginPt);
+      const contHeaderY = drawContinuationHeader(doc.bufferedPageRange().count);
+      currentY = drawTableHeader(contHeaderY);
     }
 
     // Zebra striping
     if (rIdx % 2 === 1) {
       doc.rect(marginPt, currentY, contentWidth, rowHeight).fill('#f8fafc');
     }
-    // Bottom border for each row
+
+    // Row divider
     doc.moveTo(marginPt, currentY + rowHeight).lineTo(marginPt + contentWidth, currentY + rowHeight).strokeColor('#e2e8f0').lineWidth(0.5).stroke();
 
     let curX = marginPt;
@@ -872,16 +921,16 @@ function buildPdfDocument(report, res) {
     columns.forEach(col => {
       const colW = (contentWidth * col.widthPct) / 100;
       const val = row[col.key] ?? '';
-      doc.font(isBelow ? 'Helvetica-Bold' : 'Helvetica').fontSize(8).fillColor(isBelow && col.key === 'attendance' ? '#dc2626' : '#102a43');
 
-      // If at risk and this is the attendance column, render text + "[Below min]" tag
       if (isBelow && col.key === 'attendance') {
-        doc.text(`${val} [Below min]`, curX + 2, currentY + 4, {
-          width: colW - 4,
-          align: 'right',
+        doc.font('Helvetica-Bold').fontSize(8).fillColor('#dc2626');
+        doc.text(`${val} [Below min]`, curX + 3, currentY + 4, {
+          width: colW - 6,
+          align: col.align || 'right',
           lineBreak: false
         });
       } else {
+        doc.font(isBelow ? 'Helvetica-Bold' : 'Helvetica').fontSize(8).fillColor('#0f172a');
         doc.text(String(val), curX + 3, currentY + 4, {
           width: colW - 6,
           align: col.align || 'left',
@@ -894,64 +943,81 @@ function buildPdfDocument(report, res) {
     currentY += rowHeight;
   });
 
-  // Table continuation / note below table
-  doc.font('Helvetica-Oblique').fontSize(7.5).fillColor('#627d98').text(
-    `Total records: ${rows.length}. Attendance counts approved Present records only. Generated automatically.`,
+  // Verification Summary line
+  currentY += 8;
+  doc.font('Helvetica-Oblique').fontSize(7.5).fillColor('#64748b').text(
+    `Total verified records: ${rows.length}. Attendance reflects official Department of Computer Science logs. Minimum academic benchmark: ${settings.min_attendance_threshold}%.`,
     marginPt,
-    currentY + 6
+    currentY,
+    { width: contentWidth, align: 'left' }
   );
-  currentY += 24;
+  currentY += 18;
 
-  // Last page signature blocks
-  if (currentY + 110 > pageHeight - marginPt) {
+  // Check if Official Signature & Stamp block fits on current page (needs ~95pt)
+  if (currentY + 95 > maxTableBottom) {
     doc.addPage();
-    currentY = marginPt + 20;
+    currentY = drawContinuationHeader(doc.bufferedPageRange().count) + 16;
   }
 
-  const sigW = (contentWidth - 60) / 3;
-  const sigY = currentY + 25;
+  // 3-Column Institutional Sign-Off Block
+  const sigGap = 20;
+  const sigW = (contentWidth - (2 * sigGap)) / 3;
+  const sigY = currentY + 16;
 
-  // 1. Lecturer Signature
-  doc.moveTo(marginPt, sigY).lineTo(marginPt + sigW, sigY).strokeColor('#627d98').lineWidth(1).stroke();
-  doc.font('Helvetica-Bold').fontSize(8.5).fillColor('#102a43').text(settings.lecturer_signature_label, marginPt, sigY + 6, { width: sigW, align: 'center' });
-  doc.font('Helvetica').fontSize(7.5).fillColor('#627d98').text('Date: _______________________', marginPt, sigY + 20, { width: sigW, align: 'center' });
+  // 1. Course Lecturer / Instructor
+  doc.moveTo(marginPt, sigY + 28).lineTo(marginPt + sigW, sigY + 28).strokeColor('#94a3b8').lineWidth(1).stroke();
+  doc.font('Helvetica-Bold').fontSize(8).fillColor('#0f2744')
+    .text(settings.lecturer_signature_label || 'Course Lecturer / Instructor', marginPt, sigY + 34, { width: sigW, align: 'center' });
+  doc.font('Helvetica').fontSize(7.5).fillColor('#64748b')
+    .text('Signature & Date', marginPt, sigY + 46, { width: sigW, align: 'center' });
 
-  // 2. Official Stamp Box
-  const stampX = marginPt + sigW + 30;
-  doc.roundedRect(stampX, sigY - 20, sigW, 60, 4).dash(3, { space: 2 }).strokeColor('#9fb3c8').stroke();
+  // 2. Official Department Stamp & Seal Box
+  const stampX = marginPt + sigW + sigGap;
+  doc.roundedRect(stampX, sigY, sigW, 64, 4).dash(3, { space: 2 }).strokeColor('#cbd5e1').stroke();
   doc.undash();
-  doc.font('Helvetica-Bold').fontSize(8).fillColor('#9fb3c8').text('OFFICIAL STAMP', stampX, sigY + 8, { width: sigW, align: 'center' });
+  doc.font('Helvetica-Bold').fontSize(7.5).fillColor('#94a3b8')
+    .text('OFFICIAL STAMP & SEAL', stampX, sigY + 24, { width: sigW, align: 'center' });
+  doc.font('Helvetica').fontSize(6.5).fillColor('#cbd5e1')
+    .text('Department of Computer Science', stampX, sigY + 36, { width: sigW, align: 'center' });
 
-  // 3. Head of Department Signature
-  const hodX = marginPt + (2 * (sigW + 30));
-  doc.moveTo(hodX, sigY).lineTo(hodX + sigW, sigY).strokeColor('#627d98').lineWidth(1).stroke();
-  doc.font('Helvetica-Bold').fontSize(8.5).fillColor('#102a43').text(settings.hod_signature_label, hodX, sigY + 6, { width: sigW, align: 'center' });
-  doc.font('Helvetica').fontSize(7.5).fillColor('#627d98').text('Date: _______________________', hodX, sigY + 20, { width: sigW, align: 'center' });
+  // 3. Head of Department
+  const hodX = marginPt + 2 * (sigW + sigGap);
+  doc.moveTo(hodX, sigY + 28).lineTo(hodX + sigW, sigY + 28).strokeColor('#94a3b8').lineWidth(1).stroke();
+  doc.font('Helvetica-Bold').fontSize(8).fillColor('#0f2744')
+    .text(settings.hod_signature_label || 'Head of Department', hodX, sigY + 34, { width: sigW, align: 'center' });
+  doc.font('Helvetica').fontSize(7.5).fillColor('#64748b')
+    .text('Approval Signature & Date', hodX, sigY + 46, { width: sigW, align: 'center' });
 
-  // Footers on Every Page
+  // Global Footer on Every A4 Page
   const range = doc.bufferedPageRange();
   for (let i = 0; i < range.count; i++) {
     doc.switchToPage(i);
-    const footerY = pageHeight - 34;
-    doc.font('Helvetica').fontSize(7.5).fillColor('#829ab1');
+    const footerY = pageHeight - 28;
 
-    // Left: Generated on date by name, role
-    doc.text(`Generated on ${fmtDate(meta.generated_at)} by ${meta.generated_by}, ${meta.generated_by_role}`, marginPt, footerY, {
-      width: 250,
+    // Thin footer divider rule
+    doc.moveTo(marginPt, footerY - 5).lineTo(pageWidth - marginPt, footerY - 5).strokeColor('#cbd5e1').lineWidth(0.5).stroke();
+
+    doc.font('Helvetica').fontSize(7).fillColor('#64748b');
+
+    // Left: Generation info & Ref
+    doc.text(`Generated: ${fmtDate(meta.generated_at)} by ${meta.generated_by} (${meta.generated_by_role}) · Ref: ${docRef}`, marginPt, footerY, {
+      width: 280,
       align: 'left',
       lineBreak: false
     });
 
-    // Center: Page X of Y
+    // Center: Exact Page X of Y
+    doc.font('Helvetica-Bold').fontSize(7.5).fillColor('#0f2744');
     doc.text(`Page ${i + 1} of ${range.count}`, marginPt, footerY, {
       width: contentWidth,
       align: 'center',
       lineBreak: false
     });
 
-    // Right: Confidential
-    doc.text('Confidential', pageWidth - marginPt - 100, footerY, {
-      width: 100,
+    // Right: Confidential Notice
+    doc.font('Helvetica').fontSize(7).fillColor('#64748b');
+    doc.text('OFFICIAL UNIVERSITY DOCUMENT · CONFIDENTIAL', pageWidth - marginPt - 180, footerY, {
+      width: 180,
       align: 'right',
       lineBreak: false
     });

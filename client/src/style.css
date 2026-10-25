@@ -5343,82 +5343,119 @@ button:disabled {
   }
 }
 
-/* =================================================================== A4 PRINT STYLES */
+/* ===================================================================
+   EXACT A4 PAPER & PRINT STYLES
+   =================================================================== */
 @page {
   size: A4 portrait;
-  margin: 20mm;
+  margin: 0;
 }
 
 @page landscape {
   size: A4 landscape;
-  margin: 20mm;
+  margin: 0;
+}
+
+/* Workspace Canvas for A4 Paper Sheets */
+.a4-workspace-bg {
+  background: #e2e8f0;
+  padding: 32px 16px;
+  border-radius: 16px;
+  margin-top: 14px;
+}
+
+/* Simulated Exact A4 Physical Paper Sheet (210mm x 297mm) */
+.a4-paper-sheet {
+  width: 210mm;
+  min-height: 297mm;
+  margin: 0 auto 36px auto;
+  background: #ffffff;
+  box-shadow: 0 4px 24px rgba(15, 23, 42, 0.12), 0 1px 4px rgba(15, 23, 42, 0.05);
+  padding: 14mm 16mm;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  border-radius: 4px;
+  color: #0f172a;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  overflow: hidden;
+}
+
+.a4-paper-sheet:last-child {
+  margin-bottom: 0;
+}
+
+@media (max-width: 860px) {
+  .a4-workspace-bg {
+    padding: 16px 8px;
+    background: #f1f5f9;
+  }
+  .a4-paper-sheet {
+    width: 100%;
+    min-height: auto;
+    padding: 16px 12px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  }
+}
+
+@media screen {
+  .show-on-print-only {
+    display: none !important;
+  }
 }
 
 @media print {
   nav, .sidebar, .bottom-nav, .report-controls-panel, .report-action-bar,
   .dashboard-banner, .network-pill, .header-user, .hide-on-print,
-  button, .stat-grid, header {
+  button, .stat-grid, header, .main-header, .app-sidebar, .header-avatar-link,
+  .header-mobile-logo, .main-header-right, .reports-web-view {
     display: none !important;
   }
 
-  body {
+  .show-on-print-only {
+    display: block !important;
+  }
+
+  body, html, #root, .main-wrapper, .main-content-panel {
     background: #ffffff !important;
     color: #000000 !important;
-    font-size: 10pt !important;
     margin: 0 !important;
     padding: 0 !important;
-  }
-
-  .main-content, .page-wrapper, main {
-    margin: 0 !important;
-    padding: 0 !important;
-    max-width: 100% !important;
     width: 100% !important;
-  }
-
-  .a4-preview-container {
     max-width: 100% !important;
-    margin: 0 !important;
-    padding: 0 !important;
+    overflow: visible !important;
   }
 
-  .a4-report-sheet {
+  .a4-workspace-bg {
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .a4-paper-sheet {
+    width: 210mm !important;
+    height: 297mm !important;
+    max-height: 297mm !important;
+    page-break-after: always !important;
+    break-after: page !important;
+    margin: 0 !important;
+    padding: 12mm 14mm !important;
     box-shadow: none !important;
     border: none !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    width: 100% !important;
-    max-width: 100% !important;
+    border-radius: 0 !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    box-sizing: border-box !important;
   }
 
-  .a4-table {
-    width: 100% !important;
-    border-collapse: collapse !important;
-    page-break-inside: auto !important;
-  }
-
-  .a4-table tr {
-    page-break-inside: avoid !important;
+  .a4-paper-sheet:last-child {
     page-break-after: auto !important;
-  }
-
-  .a4-table thead {
-    display: table-header-group !important;
-  }
-
-  .a4-signature-block {
-    page-break-inside: avoid !important;
-  }
-}
-
-/* Responsive adjustments for mobile report previews */
-@media (max-width: 768px) {
-  .a4-report-sheet {
-    padding: 20px 16px !important;
-    border-radius: 8px !important;
-  }
-  .a4-preview-container {
-    margin: 0 !important;
+    break-after: auto !important;
   }
 }
 

@@ -59,6 +59,7 @@ export function ReportsPage({ isHod = false }) {
   const semesters = optionsApi.data?.semesters || [];
 
   const [tableSearch, setTableSearch] = useState('');
+  const [viewMode, setViewMode] = useState('a4'); // 'a4' (Exact A4 paper pages) or 'web' (Interactive web table)
 
   // Query parameters for report API
   const queryParams = {
@@ -292,105 +293,186 @@ export function ReportsPage({ isHod = false }) {
       <ErrorText>{optionsApi.error || reportData.error || error}</ErrorText>
       <Success>{ok}</Success>
 
-      {/* 2. Responsive Web Data View (No simulated A4 paper sheet) */}
+      {/* 2. Report Data View: Exact A4 Paper Sheets & Interactive Web Table */}
       {reportData.loading ? (
         <Loading text="Compiling verified attendance data…" />
-      ) : d ? (
-        <div className="reports-analytics-view" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-          {/* Top 4 KPI Stat Cards */}
-          <div className="hod-metrics-grid">
-            <div className="hod-metric-card">
-              <div className="hod-stat-icon blue">
-                <Users size={24} />
-              </div>
-              <div className="hod-stat-data">
-                <span className="hod-stat-label">Total Students / Entries</span>
-                <strong className="hod-stat-value">{d.summary?.total_students || d.rows?.length || 0}</strong>
-                <span className="hod-stat-trend">Filtered dataset</span>
-              </div>
-            </div>
+      ) : d ? (() => {
+        const filteredRows = (d.rows || []).filter(row => {
+          if (!tableSearch.trim()) return true;
+          const q = tableSearch.toLowerCase();
+          return Object.values(row).some(v => String(v || '').toLowerCase().includes(q));
+        });
 
-            <div className="hod-metric-card">
-              <div className="hod-stat-icon green">
-                <Calendar size={24} />
-              </div>
-              <div className="hod-stat-data">
-                <span className="hod-stat-label">Sessions Held</span>
-                <strong className="hod-stat-value">{d.summary?.sessions_held || 0}</strong>
-                <span className="hod-stat-trend up">Conducted lectures</span>
-              </div>
-            </div>
+        // Compute unique audit document reference code
+        const dateObj = new Date(d.meta?.generated_at || Date.now());
+        const docRef = `MMTU-CS-ATT-${dateObj.getFullYear()}-${Math.abs((d.meta?.title || 'REP').split('').reduce((a, b) => (((a << 5) - a) + b.charCodeAt(0)) | 0, 0)).toString(36).toUpperCase().padStart(4, '0')}`;
 
-            <div className="hod-metric-card">
-              <div className="hod-stat-icon purple">
-                <CheckCircle2 size={24} />
-              </div>
-              <div className="hod-stat-data">
-                <span className="hod-stat-label">Average Attendance</span>
-                <strong className="hod-stat-value">{d.summary?.average_attendance || 0}%</strong>
-                <span className="hod-stat-trend up">Department benchmark: {d.settings?.min_attendance_threshold || 75}%</span>
-              </div>
-            </div>
+        // Exact A4 Paper Pages partitioning:
+        // - Page 1 has institution crest, ref bar, 4 summary cards, table header, and rows that fill page 1.
+        // - If total records <= 14, Page 1 ALSO fits the official signature block (1 single complete A4 sheet).
+        // - If total records > 14, Page 1 takes 18 rows, Page 2 takes up to 28 rows (or 20 if last page with signatures), etc.
+        const PAGE_1_CAPACITY = 18;
+        const PAGE_N_CAPACITY_NO_SIG = 28;
+        const PAGE_N_CAPACITY_WITH_SIG = 20;
 
-            <div className="hod-metric-card">
-              <div className={`hod-stat-icon ${(d.summary?.below_minimum || 0) > 0 ? 'red' : 'amber'}`}>
-                <AlertTriangle size={24} />
-              </div>
-              <div className="hod-stat-data">
-                <span className="hod-stat-label">Below Minimum</span>
-                <strong className="hod-stat-value" style={{ color: (d.summary?.below_minimum || 0) > 0 ? '#dc2626' : undefined }}>
-                  {d.summary?.below_minimum || 0}
-                </strong>
-                <span className="hod-stat-trend" style={{ color: (d.summary?.below_minimum || 0) > 0 ? '#dc2626' : undefined }}>
-                  {(d.summary?.below_minimum || 0) > 0 ? 'Requires academic attention' : 'All students in good standing'}
-                </span>
-              </div>
-            </div>
-          </div>
+        const a4Pages = [];
+        if (filteredRows.length <= 14) {
+          a4Pages.push({
+            pageNumber: 1,
+            isFirstPage: true,
+            isLastPage: true,
+            rows: filteredRows,
+            hasSignatures: true
+          });
+        } else {
+          a4Pages.push({
+            pageNumber: 1,
+            isFirstPage: true,
+            isLastPage: false,
+            rows: filteredRows.slice(0, PAGE_1_CAPACITY),
+            hasSignatures: false
+          });
 
-          {/* Interactive Web Data Table Panel */}
-          <div className="panel" style={{ padding: '20px 24px', background: '#fff', borderRadius: 16, border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12, marginBottom: 16 }}>
-              <div>
-                <h3 style={{ margin: '0 0 4px', fontSize: 17, fontWeight: 800, color: '#0f172a' }}>
-                  {d.meta?.title}
-                </h3>
-                <p className="muted small" style={{ margin: 0, color: '#64748b' }}>
-                  {d.meta?.filter_summary}
-                </p>
-              </div>
+          let startIndex = PAGE_1_CAPACITY;
+          let pageNum = 2;
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <div style={{ position: 'relative', width: 220 }}>
-                  <Search size={14} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
-                  <input
-                    type="text"
-                    placeholder="Search table…"
-                    value={tableSearch}
-                    onChange={e => setTableSearch(e.target.value)}
-                    style={{ paddingLeft: 30, height: 34, fontSize: 12, borderRadius: 8 }}
-                  />
+          while (startIndex < filteredRows.length) {
+            const remaining = filteredRows.length - startIndex;
+            if (remaining <= PAGE_N_CAPACITY_WITH_SIG) {
+              a4Pages.push({
+                pageNumber: pageNum,
+                isFirstPage: false,
+                isLastPage: true,
+                rows: filteredRows.slice(startIndex, startIndex + remaining),
+                hasSignatures: true
+              });
+              startIndex += remaining;
+            } else {
+              a4Pages.push({
+                pageNumber: pageNum,
+                isFirstPage: false,
+                isLastPage: false,
+                rows: filteredRows.slice(startIndex, startIndex + PAGE_N_CAPACITY_NO_SIG),
+                hasSignatures: false
+              });
+              startIndex += PAGE_N_CAPACITY_NO_SIG;
+              pageNum++;
+            }
+          }
+        }
+
+        // Helper to render an exact physical A4 paper sheet
+        const renderA4Sheet = (page, totalPages) => (
+          <div key={page.pageNumber} className="a4-paper-sheet">
+            {/* Top Section */}
+            <div>
+              {page.isFirstPage ? (
+                /* Page 1: Official Crest, University Name, Ref Bar, Title, Summary Cards */
+                <div style={{ marginBottom: 12 }}>
+                  <div style={{ textAlign: 'center', marginBottom: 10 }}>
+                    <img
+                      src={d.settings?.logo_data || '/logo.png'}
+                      alt="MMTU Crest"
+                      style={{ height: 46, objectFit: 'contain', margin: '0 auto 6px auto', display: 'block' }}
+                    />
+                    <h1 style={{ margin: 0, fontSize: 16, fontWeight: 800, color: '#0f2744', letterSpacing: '0.04em' }}>
+                      {(d.settings?.university_name || 'MILTON MARGAI TECHNICAL UNIVERSITY').toUpperCase()}
+                    </h1>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: '#334155', letterSpacing: '0.05em', marginTop: 3 }}>
+                      FACULTY OF ENGINEERING & TECHNOLOGY · {(d.settings?.department_name || 'DEPARTMENT OF COMPUTER SCIENCE').toUpperCase()}
+                    </div>
+                  </div>
+
+                  {/* Security & Audit Reference Bar */}
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    background: '#f1f5f9',
+                    border: '1px solid #cbd5e1',
+                    borderRadius: 6,
+                    padding: '4px 10px',
+                    fontSize: 10,
+                    marginBottom: 10
+                  }}>
+                    <span style={{ fontWeight: 700, color: '#1e40af' }}>REF: {docRef}</span>
+                    <span style={{ fontWeight: 800, color: '#059669', letterSpacing: '0.05em' }}>VERIFIED ACADEMIC AUDIT</span>
+                    <span style={{ color: '#475569' }}>ISSUED: {fmtDate(d.meta?.generated_at)}</span>
+                  </div>
+
+                  {/* Title & Filter Summary */}
+                  <div style={{ textAlign: 'center', marginBottom: 12 }}>
+                    <h2 style={{ margin: 0, fontSize: 15, fontWeight: 800, color: '#0f2744' }}>
+                      {d.meta?.title}
+                    </h2>
+                    <p style={{ margin: '3px 0 0', fontSize: 11, color: '#64748b' }}>
+                      {d.meta?.filter_summary}
+                    </p>
+                  </div>
+
+                  {/* 4 Summary Cards */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(4, 1fr)',
+                    gap: 8,
+                    marginBottom: 12
+                  }}>
+                    <div style={{ background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: 6, padding: '6px 8px', textAlign: 'center' }}>
+                      <strong style={{ display: 'block', fontSize: 15, color: '#0f2744' }}>{d.summary?.total_students || d.rows?.length || 0}</strong>
+                      <span style={{ fontSize: 9, fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>Students</span>
+                    </div>
+                    <div style={{ background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: 6, padding: '6px 8px', textAlign: 'center' }}>
+                      <strong style={{ display: 'block', fontSize: 15, color: '#0f2744' }}>{d.summary?.sessions_held || 0}</strong>
+                      <span style={{ fontSize: 9, fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>Sessions Held</span>
+                    </div>
+                    <div style={{ background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: 6, padding: '6px 8px', textAlign: 'center' }}>
+                      <strong style={{ display: 'block', fontSize: 15, color: '#0f2744' }}>{d.summary?.average_attendance || 0}%</strong>
+                      <span style={{ fontSize: 9, fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>Avg Attendance</span>
+                    </div>
+                    <div style={{
+                      background: (d.summary?.below_minimum || 0) > 0 ? '#fef2f2' : '#f8fafc',
+                      border: `1px solid ${(d.summary?.below_minimum || 0) > 0 ? '#fca5a5' : '#cbd5e1'}`,
+                      borderRadius: 6,
+                      padding: '6px 8px',
+                      textAlign: 'center'
+                    }}>
+                      <strong style={{ display: 'block', fontSize: 15, color: (d.summary?.below_minimum || 0) > 0 ? '#dc2626' : '#0f2744' }}>
+                        {d.summary?.below_minimum || 0}
+                      </strong>
+                      <span style={{ fontSize: 9, fontWeight: 700, color: (d.summary?.below_minimum || 0) > 0 ? '#dc2626' : '#64748b', textTransform: 'uppercase' }}>
+                        Below Minimum
+                      </span>
+                    </div>
+                  </div>
                 </div>
-                <span className="badge" style={{ fontSize: 11, background: '#f1f5f9', color: '#475569' }}>
-                  {d.rows?.length || 0} Records
-                </span>
-              </div>
-            </div>
+              ) : (
+                /* Page 2+: Running Continuation Header */
+                <div style={{ borderBottom: '1.5px solid #cbd5e1', paddingBottom: 6, marginBottom: 10 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 11, fontWeight: 700, color: '#0f2744' }}>
+                    <span>{(d.settings?.university_name || 'MILTON MARGAI TECHNICAL UNIVERSITY').toUpperCase()}</span>
+                    <span style={{ color: '#64748b', fontSize: 10 }}>Page {page.pageNumber} of {totalPages}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 9.5, color: '#64748b', marginTop: 2 }}>
+                    <span>{d.settings?.department_name || 'Department of Computer Science'} · {d.meta?.title} (Continued)</span>
+                    <span style={{ fontFamily: 'monospace' }}>Ref: {docRef}</span>
+                  </div>
+                </div>
+              )}
 
-            <div style={{ overflowX: 'auto', borderRadius: 8, border: '1px solid #e2e8f0' }}>
-              <table className="table" style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+              {/* Table of Records */}
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 10.5 }}>
                 <thead>
-                  <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>
+                  <tr style={{ background: '#0f2744', color: '#ffffff' }}>
                     {d.columns?.map(col => (
                       <th
                         key={col.key}
                         style={{
-                          padding: '10px 14px',
+                          padding: '6px 8px',
                           textAlign: col.align || 'left',
-                          fontSize: 12,
+                          fontSize: 9.5,
                           fontWeight: 700,
-                          color: '#475569',
-                          whiteSpace: 'nowrap'
+                          letterSpacing: '0.03em',
+                          borderRight: '1px solid #1e3a5f'
                         }}
                       >
                         {col.label}
@@ -399,31 +481,19 @@ export function ReportsPage({ isHod = false }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {(() => {
-                    const filteredRows = (d.rows || []).filter(row => {
-                      if (!tableSearch.trim()) return true;
-                      const q = tableSearch.toLowerCase();
-                      return Object.values(row).some(v => String(v || '').toLowerCase().includes(q));
-                    });
-
-                    if (!filteredRows.length) {
-                      return (
-                        <tr>
-                          <td colSpan={d.columns?.length || 4} style={{ padding: '36px 16px', textAlign: 'center', color: '#64748b' }}>
-                            <p style={{ margin: '0 0 6px', fontWeight: 600 }}>No matching records found.</p>
-                            <span className="small muted">Try adjusting your filters or search terms.</span>
-                          </td>
-                        </tr>
-                      );
-                    }
-
-                    return filteredRows.map((row, idx) => (
+                  {!page.rows.length ? (
+                    <tr>
+                      <td colSpan={d.columns?.length || 4} style={{ padding: '24px 8px', textAlign: 'center', color: '#64748b' }}>
+                        No records match the active criteria.
+                      </td>
+                    </tr>
+                  ) : (
+                    page.rows.map((row, rIdx) => (
                       <tr
-                        key={idx}
+                        key={rIdx}
                         style={{
-                          background: idx % 2 === 1 ? '#f8fafc' : '#ffffff',
-                          borderBottom: '1px solid #f1f5f9',
-                          transition: 'background 0.15s ease'
+                          background: rIdx % 2 === 1 ? '#f8fafc' : '#ffffff',
+                          borderBottom: '1px solid #e2e8f0'
                         }}
                       >
                         {d.columns?.map(col => {
@@ -433,65 +503,316 @@ export function ReportsPage({ isHod = false }) {
                             <td
                               key={col.key}
                               style={{
-                                padding: '10px 14px',
+                                padding: '5px 8px',
                                 textAlign: col.align || 'left',
-                                whiteSpace: 'nowrap',
-                                fontWeight: row.is_below ? 600 : 400
+                                color: row.is_below && isRateCol ? '#dc2626' : '#0f172a',
+                                fontWeight: row.is_below && isRateCol ? 700 : 400
                               }}
                             >
                               {isRateCol ? (
-                                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                                  <span
-                                    style={{
-                                      padding: '2px 8px',
-                                      borderRadius: 6,
-                                      fontSize: 12,
-                                      fontWeight: 700,
-                                      color: row.is_below ? '#dc2626' : '#166534',
-                                      background: row.is_below ? '#fef2f2' : '#f0fdf4',
-                                      border: `1px solid ${row.is_below ? '#fecaca' : '#bbf7d0'}`
-                                    }}
-                                  >
-                                    {val}
-                                  </span>
+                                <span>
+                                  {val}
                                   {row.is_below && (
-                                    <span
-                                      style={{
-                                        display: 'inline-flex',
-                                        alignItems: 'center',
-                                        gap: 3,
-                                        padding: '1px 6px',
-                                        borderRadius: 4,
-                                        fontSize: 10,
-                                        fontWeight: 700,
-                                        color: '#b91c1c',
-                                        background: '#fee2e2'
-                                      }}
-                                    >
+                                    <span style={{
+                                      marginLeft: 6,
+                                      padding: '1px 4px',
+                                      borderRadius: 4,
+                                      fontSize: 8.5,
+                                      fontWeight: 800,
+                                      background: '#fee2e2',
+                                      color: '#dc2626'
+                                    }}>
                                       Below min
                                     </span>
                                   )}
-                                </div>
+                                </span>
                               ) : (
-                                <span style={{ color: '#1e293b' }}>{val}</span>
+                                String(val ?? '')
                               )}
                             </td>
                           );
                         })}
                       </tr>
-                    ));
-                  })()}
+                    ))
+                  )}
                 </tbody>
               </table>
+
+              {/* End-of-Report Official Signatures & Seal */}
+              {page.hasSignatures && (
+                <div style={{ marginTop: 14 }}>
+                  <p style={{ margin: '0 0 14px', fontSize: 9.5, color: '#64748b', fontStyle: 'italic' }}>
+                    Total verified records: {filteredRows.length}. Attendance verified according to official Department of Computer Science regulations. Minimum benchmark threshold: {d.settings?.min_attendance_threshold || 75}%.
+                  </p>
+
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(3, 1fr)',
+                    gap: 16,
+                    alignItems: 'flex-end',
+                    marginTop: 8
+                  }}>
+                    {/* 1. Lecturer In-Charge */}
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ borderTop: '1px solid #94a3b8', paddingTop: 6 }}>
+                        <strong style={{ display: 'block', fontSize: 10.5, color: '#0f2744' }}>
+                          {d.settings?.lecturer_signature_label || 'Course Lecturer / Instructor'}
+                        </strong>
+                        <span style={{ fontSize: 9, color: '#64748b' }}>Signature & Date</span>
+                      </div>
+                    </div>
+
+                    {/* 2. Official Stamp & Seal */}
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{
+                        border: '1.5px dashed #cbd5e1',
+                        borderRadius: 6,
+                        height: 58,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        background: '#f8fafc'
+                      }}>
+                        <span style={{ fontSize: 9.5, fontWeight: 800, color: '#94a3b8', letterSpacing: '0.05em' }}>
+                          OFFICIAL STAMP & SEAL
+                        </span>
+                        <span style={{ fontSize: 8, color: '#cbd5e1', marginTop: 2 }}>
+                          Department of Computer Science
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* 3. Head of Department */}
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ borderTop: '1px solid #94a3b8', paddingTop: 6 }}>
+                        <strong style={{ display: 'block', fontSize: 10.5, color: '#0f2744' }}>
+                          {d.settings?.hod_signature_label || 'Head of Department'}
+                        </strong>
+                        <span style={{ fontSize: 9, color: '#64748b' }}>Approval Signature & Date</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 14, fontSize: 12, color: '#64748b' }}>
-              <span>Generated on {fmtDate(d.meta?.generated_at)} by {d.meta?.generated_by} ({d.meta?.generated_by_role})</span>
-              <span>Official Department of Computer Science Record</span>
+            {/* Bottom Footer on Every A4 Sheet */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              borderTop: '1px solid #cbd5e1',
+              paddingTop: 6,
+              fontSize: 9,
+              color: '#64748b',
+              marginTop: 10
+            }}>
+              <span>Generated: {fmtDate(d.meta?.generated_at)} by {d.meta?.generated_by} ({d.meta?.generated_by_role}) · Ref: {docRef}</span>
+              <strong style={{ color: '#0f2744', fontSize: 9.5 }}>Page {page.pageNumber} of {totalPages}</strong>
+              <span>OFFICIAL UNIVERSITY DOCUMENT · CONFIDENTIAL</span>
             </div>
           </div>
-        </div>
-      ) : null}
+        );
+
+        return (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            {/* View Mode Switcher & Quick Search (Hidden during print) */}
+            <div className="hide-on-print" style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              flexWrap: 'wrap',
+              gap: 12,
+              background: '#ffffff',
+              padding: '12px 18px',
+              borderRadius: 14,
+              border: '1px solid #e2e8f0',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.03)'
+            }}>
+              {/* Left: View Mode Pills */}
+              <div style={{ display: 'inline-flex', background: '#f1f5f9', padding: 4, borderRadius: 10 }}>
+                <button
+                  type="button"
+                  onClick={() => setViewMode('a4')}
+                  style={{
+                    padding: '7px 16px',
+                    borderRadius: 8,
+                    fontSize: 12.5,
+                    fontWeight: 700,
+                    background: viewMode === 'a4' ? '#ffffff' : 'transparent',
+                    color: viewMode === 'a4' ? '#0f2744' : '#64748b',
+                    boxShadow: viewMode === 'a4' ? '0 1px 4px rgba(0,0,0,0.08)' : 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    transition: '0.15s'
+                  }}
+                >
+                  <FileText size={15} color={viewMode === 'a4' ? '#2563eb' : '#64748b'} /> Exact A4 Paper View ({a4Pages.length} {a4Pages.length === 1 ? 'Page' : 'Pages'})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewMode('web')}
+                  style={{
+                    padding: '7px 16px',
+                    borderRadius: 8,
+                    fontSize: 12.5,
+                    fontWeight: 700,
+                    background: viewMode === 'web' ? '#ffffff' : 'transparent',
+                    color: viewMode === 'web' ? '#0f2744' : '#64748b',
+                    boxShadow: viewMode === 'web' ? '0 1px 4px rgba(0,0,0,0.08)' : 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    transition: '0.15s'
+                  }}
+                >
+                  <Layers size={15} color={viewMode === 'web' ? '#2563eb' : '#64748b'} /> Interactive Web Table
+                </button>
+              </div>
+
+              {/* Right: Search Filter & Total Count */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ position: 'relative', width: 220 }}>
+                  <Search size={14} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                  <input
+                    type="text"
+                    placeholder="Search records…"
+                    value={tableSearch}
+                    onChange={e => setTableSearch(e.target.value)}
+                    style={{ paddingLeft: 30, height: 34, fontSize: 12, borderRadius: 8 }}
+                  />
+                </div>
+                <span className="badge" style={{ fontSize: 11, background: '#f1f5f9', color: '#475569' }}>
+                  {filteredRows.length} Records
+                </span>
+              </div>
+            </div>
+
+            {/* View 1: Exact A4 Paper View (Active or Print) */}
+            {viewMode === 'a4' ? (
+              <div className="a4-workspace-bg">
+                {a4Pages.map(page => renderA4Sheet(page, a4Pages.length))}
+              </div>
+            ) : (
+              /* View 2: Interactive Web Table + KPI Cards */
+              <div className="reports-web-view" style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+                {/* 4 KPI Metric Cards */}
+                <div className="hod-metrics-grid">
+                  <div className="hod-metric-card">
+                    <div className="hod-stat-icon blue"><Users size={24} /></div>
+                    <div className="hod-stat-data">
+                      <span className="hod-stat-label">Total Students / Entries</span>
+                      <strong className="hod-stat-value">{d.summary?.total_students || d.rows?.length || 0}</strong>
+                      <span className="hod-stat-trend">Filtered dataset</span>
+                    </div>
+                  </div>
+                  <div className="hod-metric-card">
+                    <div className="hod-stat-icon green"><Calendar size={24} /></div>
+                    <div className="hod-stat-data">
+                      <span className="hod-stat-label">Sessions Held</span>
+                      <strong className="hod-stat-value">{d.summary?.sessions_held || 0}</strong>
+                      <span className="hod-stat-trend up">Conducted lectures</span>
+                    </div>
+                  </div>
+                  <div className="hod-metric-card">
+                    <div className="hod-stat-icon purple"><CheckCircle2 size={24} /></div>
+                    <div className="hod-stat-data">
+                      <span className="hod-stat-label">Average Attendance</span>
+                      <strong className="hod-stat-value">{d.summary?.average_attendance || 0}%</strong>
+                      <span className="hod-stat-trend up">Benchmark: {d.settings?.min_attendance_threshold || 75}%</span>
+                    </div>
+                  </div>
+                  <div className="hod-metric-card">
+                    <div className={`hod-stat-icon ${(d.summary?.below_minimum || 0) > 0 ? 'red' : 'amber'}`}><AlertTriangle size={24} /></div>
+                    <div className="hod-stat-data">
+                      <span className="hod-stat-label">Below Minimum</span>
+                      <strong className="hod-stat-value" style={{ color: (d.summary?.below_minimum || 0) > 0 ? '#dc2626' : undefined }}>
+                        {d.summary?.below_minimum || 0}
+                      </strong>
+                      <span className="hod-stat-trend" style={{ color: (d.summary?.below_minimum || 0) > 0 ? '#dc2626' : undefined }}>
+                        {(d.summary?.below_minimum || 0) > 0 ? 'Deficient attendance' : 'Good academic standing'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Web Table Panel */}
+                <div className="panel" style={{ padding: '20px 24px', background: '#fff', borderRadius: 16, border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+                  <div style={{ overflowX: 'auto', borderRadius: 8, border: '1px solid #e2e8f0' }}>
+                    <table className="table" style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                      <thead>
+                        <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>
+                          {d.columns?.map(col => (
+                            <th key={col.key} style={{ padding: '10px 14px', textAlign: col.align || 'left', fontSize: 12, fontWeight: 700, color: '#475569', whiteSpace: 'nowrap' }}>
+                              {col.label}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {!filteredRows.length ? (
+                          <tr>
+                            <td colSpan={d.columns?.length || 4} style={{ padding: '36px 16px', textAlign: 'center', color: '#64748b' }}>
+                              <p style={{ margin: '0 0 6px', fontWeight: 600 }}>No matching records found.</p>
+                              <span className="small muted">Try adjusting your filters or search terms.</span>
+                            </td>
+                          </tr>
+                        ) : (
+                          filteredRows.map((row, idx) => (
+                            <tr key={idx} style={{ background: idx % 2 === 1 ? '#f8fafc' : '#ffffff', borderBottom: '1px solid #f1f5f9' }}>
+                              {d.columns?.map(col => {
+                                const val = row[col.key];
+                                const isRateCol = col.key === 'attendance';
+                                return (
+                                  <td key={col.key} style={{ padding: '10px 14px', textAlign: col.align || 'left', whiteSpace: 'nowrap', fontWeight: row.is_below ? 600 : 400 }}>
+                                    {isRateCol ? (
+                                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                                        <span style={{
+                                          padding: '2px 8px',
+                                          borderRadius: 6,
+                                          fontSize: 12,
+                                          fontWeight: 700,
+                                          color: row.is_below ? '#dc2626' : '#166534',
+                                          background: row.is_below ? '#fef2f2' : '#f0fdf4',
+                                          border: `1px solid ${row.is_below ? '#fecaca' : '#bbf7d0'}`
+                                        }}>
+                                          {val}
+                                        </span>
+                                        {row.is_below && (
+                                          <span style={{ padding: '1px 6px', borderRadius: 4, fontSize: 10, fontWeight: 700, color: '#b91c1c', background: '#fee2e2' }}>
+                                            Below min
+                                          </span>
+                                        )}
+                                      </div>
+                                    ) : (
+                                      <span style={{ color: '#1e293b' }}>{val}</span>
+                                    )}
+                                  </td>
+                                );
+                              })}
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* Print-only container for when in web mode */}
+                <div className="show-on-print-only">
+                  {a4Pages.map(page => renderA4Sheet(page, a4Pages.length))}
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })() : null}
 
       {/* 3. Report Settings Modal (HOD Only) */}
       {showSettingsModal && (
