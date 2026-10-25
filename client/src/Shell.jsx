@@ -321,9 +321,6 @@ export default function Shell({ mobileNav = [], sidebarNav = [], nav, titles = {
             <Link to="/" className="flex items-center gap-2 min-w-0 text-inherit no-underline">
               <img src="/logo.png" alt="MMTU" className="header-mobile-logo" />
               <div className="main-header-title-box flex min-w-0">
-                <span className="main-header-portal-tag">
-                  MMTU CS · {ROLE_LABELS[profile.role]?.toUpperCase()}
-                </span>
                 <h1 className="main-header-page-title">{title}</h1>
               </div>
             </Link>

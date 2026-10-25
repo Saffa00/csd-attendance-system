@@ -329,6 +329,7 @@ svg.lucide, .lucide { display: inline-block; vertical-align: middle; }
   min-height: 100vh;
   min-height: 100dvh;
   background: var(--bg);
+  overflow-x: hidden;
 }
 
 /* Header */
@@ -415,7 +416,7 @@ svg.lucide, .lucide { display: inline-block; vertical-align: middle; }
   }
   .main-header-page-title {
     font-size: 15px;
-    max-width: 150px;
+    max-width: calc(100vw - 170px);
   }
   .main-header-right {
     gap: 6px;
@@ -452,6 +453,8 @@ svg.lucide, .lucide { display: inline-block; vertical-align: middle; }
   max-width: 1240px;
   width: 100%;
   margin: 0 auto;
+  box-sizing: border-box;
+  min-width: 0;
 }
 
 .net {
@@ -729,6 +732,7 @@ main {
   justify-content: space-between;
   gap: 10px;
   margin-bottom: 12px;
+  flex-wrap: wrap;
 }
 .section-heading h2, .panel h2 { margin: 0; font-size: 16px; font-weight: 700; color: var(--primary-dark); }
 .panel h3 { margin: 14px 0 8px; font-size: 14px; }
@@ -741,8 +745,13 @@ main {
   gap: 12px;
   padding: 12px 0;
   border-bottom: 1px solid #edf2f7;
+  flex-wrap: wrap;
 }
 .row:last-child { border-bottom: none; }
+.row > div:first-child {
+  min-width: 0;
+  flex: 1 1 180px;
+}
 .row p { margin: 3px 0 0; }
 .time { font-size: 12px; font-weight: 700; color: var(--primary); white-space: nowrap; }
 

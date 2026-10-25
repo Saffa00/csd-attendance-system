@@ -228,31 +228,34 @@ export default function HodModules() {
             background: 'linear-gradient(135deg, #f0f7ff 0%, #e0f2fe 100%)',
             border: '1px solid #bae6fd',
             borderRadius: 16,
-            padding: '24px 28px',
+            padding: 'clamp(14px, 3.5vw, 24px) clamp(16px, 4vw, 28px)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
             position: 'relative',
             overflow: 'hidden',
             marginBottom: 20,
+            flexWrap: 'wrap',
+            gap: 12,
             boxShadow: '0 2px 8px rgba(2, 132, 199, 0.08)'
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 18, zIndex: 2 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14, zIndex: 2, flexWrap: 'wrap' }}>
               <div style={{
-                width: 52,
-                height: 52,
+                width: 48,
+                height: 48,
                 borderRadius: 14,
                 background: '#ffffff',
                 border: '1px solid #bae6fd',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
+                flexShrink: 0,
                 boxShadow: '0 4px 12px rgba(2, 132, 199, 0.12)'
               }}>
-                <BookOpen size={26} color="#0284c7" />
+                <BookOpen size={24} color="#0284c7" />
               </div>
-              <div>
-                <h2 style={{ margin: 0, fontSize: 22, fontWeight: 750, color: '#0f172a', letterSpacing: '-0.02em' }}>
+              <div style={{ minWidth: 0 }}>
+                <h2 style={{ margin: 0, fontSize: 'clamp(18px, 4vw, 22px)', fontWeight: 750, color: '#0f172a', letterSpacing: '-0.02em' }}>
                   {editingId ? `Edit Module: ${form.code}` : 'Add New Module'}
                 </h2>
                 <p style={{ margin: '4px 0 0', fontSize: 13, color: '#475569' }}>
@@ -269,15 +272,15 @@ export default function HodModules() {
               opacity: 0.85
             }}>
               <div style={{
-                width: 76,
-                height: 76,
+                width: 60,
+                height: 60,
                 borderRadius: '50%',
                 background: 'rgba(255,255,255,0.6)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center'
               }}>
-                <GraduationCap size={40} color="#0284c7" />
+                <GraduationCap size={32} color="#0284c7" />
               </div>
             </div>
           </div>
@@ -287,14 +290,14 @@ export default function HodModules() {
             background: '#ffffff',
             border: '1px solid #e2e8f0',
             borderRadius: 16,
-            padding: '28px 32px',
+            padding: 'clamp(14px, 4vw, 28px)',
             boxShadow: '0 4px 16px -2px rgba(15, 23, 42, 0.04)'
           }}>
             <form onSubmit={handleSubmit}>
               <div style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-                gap: '24px 28px'
+                gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))',
+                gap: '20px 24px'
               }}>
                 {/* 1. Programme */}
                 <div>
@@ -822,7 +825,7 @@ export default function HodModules() {
                     No modules added for {courseName} yet.
                   </div>
                 ) : (
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 12 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 280px), 1fr))', gap: 12 }}>
                     {list.map(c => {
                       const assigned = (c.lecturer_courses || []).map(lc => lc.profiles?.full_name).filter(Boolean);
                       return (

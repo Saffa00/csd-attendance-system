@@ -2779,96 +2779,24 @@ export function StudentProfile() {
   const academicYear = (ovApi.data?.year || profile.academic_year || '2026/2027').replace(/\s*academic\s*year/i, '').trim();
   const levelLabel = `Level ${studentLevel}`;
 
-  const fallbackModules = [
-    {
-      id: `fb-${studentLevel}-1`,
-      code: `COMS ${studentLevel}${studentSemNum}1`,
-      title: studentLevel === 1 ? 'Introduction to Computer Science' : studentLevel === 2 ? 'Advanced Object-Oriented Programming' : studentLevel === 3 ? 'Software Engineering & Architecture' : 'Final Year Capstone Project I',
-      level: studentLevel,
-      credit_units: studentLevel === 4 ? 4 : 3,
-      semester_name: semester,
-      lecturer_name: 'Dr. K. Turay',
-      rate: 95,
-      attended: 19,
-      total_classes: 20,
-      missed: 1,
-      pending: 0
-    },
-    {
-      id: `fb-${studentLevel}-2`,
-      code: `COMS ${studentLevel}${studentSemNum}2`,
-      title: studentLevel === 1 ? 'Structured Programming in C/C++' : studentLevel === 2 ? 'Data Structures and Algorithms II' : studentLevel === 3 ? 'Mobile & Cloud Application Development' : 'Cloud Infrastructure & Enterprise Systems',
-      level: studentLevel,
-      credit_units: studentLevel === 1 ? 4 : 3,
-      semester_name: semester,
-      lecturer_name: 'Prof. J. Ahmed',
-      rate: 90,
-      attended: 18,
-      total_classes: 20,
-      missed: 2,
-      pending: 0
-    },
-    {
-      id: `fb-${studentLevel}-3`,
-      code: `COMS ${studentLevel}${studentSemNum}3`,
-      title: studentLevel === 1 ? 'Discrete Mathematics & Computing Logic' : studentLevel === 2 ? 'Database Systems & SQL Design' : studentLevel === 3 ? 'Artificial Intelligence & Machine Learning' : 'Data Science, Mining & Big Data Analytics',
-      level: studentLevel,
-      credit_units: 3,
-      semester_name: semester,
-      lecturer_name: 'Dr. M. Bangura',
-      rate: 85,
-      attended: 17,
-      total_classes: 20,
-      missed: 3,
-      pending: 0
-    },
-    {
-      id: `fb-${studentLevel}-4`,
-      code: `COMS ${studentLevel}${studentSemNum}4`,
-      title: studentLevel === 1 ? 'Computer Hardware & Digital Electronics' : studentLevel === 2 ? 'Computer Networks & Data Communications' : studentLevel === 3 ? 'Information Security, Cryptography & Privacy' : 'IT Governance, Ethics & Professional Practice',
-      level: studentLevel,
-      credit_units: studentLevel === 4 ? 2 : 3,
-      semester_name: semester,
-      lecturer_name: 'Dr. S. Conteh',
-      rate: 88,
-      attended: 18,
-      total_classes: 20,
-      missed: 2,
-      pending: 0
-    },
-    {
-      id: `fb-${studentLevel}-5`,
-      code: `COMS ${studentLevel}${studentSemNum}5`,
-      title: studentLevel === 1 ? 'Communication Skills & Computing Ethics' : studentLevel === 2 ? 'Operating Systems & System Architecture' : studentLevel === 3 ? 'Distributed Systems & Microservices' : 'Advanced Computing Seminars',
-      level: studentLevel,
-      credit_units: 2,
-      semester_name: semester,
-      lecturer_name: 'Dr. I. Kamara',
-      rate: 100,
-      attended: 20,
-      total_classes: 20,
-      missed: 0,
-      pending: 0
-    }
-  ];
-
-  // Combine real courses with fallback defaults if no courses exist yet
-  const rawList = (coursesApi.data && coursesApi.data.length > 0)
-    ? coursesApi.data.map((c, i) => ({
-        id: c.id || `c-${i}`,
-        code: c.code || `COMS ${studentLevel}${studentSemNum}${i+1}`,
-        title: c.title || 'Department Module',
-        level: c.level || studentLevel,
-        credit_units: c.credit_units || 3,
-        semester_name: (c.semester === 2 || c.semester_name === 'Second Semester') ? 'Second Semester' : 'First Semester',
-        lecturer_name: c.lecturer_name || (i % 2 === 0 ? 'Dr. K. Turay' : 'Prof. J. Ahmed'),
-        rate: c.rate ?? (c.attendance?.rate || 90),
-        attended: c.attended ?? (c.attendance?.approved || 18),
-        total_classes: c.total_classes ?? (c.attendance?.total || 20),
-        missed: c.missed ?? ((c.attendance?.absent || 0) + (c.attendance?.rejected || 0)),
-        pending: c.pending ?? (c.attendance?.pending || 0)
-      }))
-    : fallbackModules;
+  // Real courses assigned to the student (no fake dummy courses)
+  const rawList = useMemo(() => {
+    if (!coursesApi.data || coursesApi.data.length === 0) return [];
+    return coursesApi.data.map((c, i) => ({
+      id: c.id || `c-${i}`,
+      code: c.code || 'COMS',
+      title: c.title || 'Department Module',
+      level: c.level || studentLevel,
+      credit_units: Number(c.credit_units) || 3,
+      semester_name: (c.semester === 2 || c.semester_name === 'Second Semester') ? 'Second Semester' : 'First Semester',
+      lecturer_name: c.lecturer_name || 'Department Lecturer',
+      rate: c.rate ?? (c.attendance?.rate || 0),
+      attended: c.attended ?? (c.attendance?.approved || 0),
+      total_classes: c.total_classes ?? (c.attendance?.total || 0),
+      missed: c.missed ?? ((c.attendance?.absent || 0) + (c.attendance?.rejected || 0)),
+      pending: c.pending ?? (c.attendance?.pending || 0)
+    }));
+  }, [coursesApi.data, studentLevel]);
 
   // Filter by search term
   const modules = useMemo(() => {
@@ -2883,17 +2811,17 @@ export function StudentProfile() {
 
   // Aggregate stats
   const totalModules = rawList.length;
-  const totalCredits = rawList.reduce((acc, m) => acc + (Number(m.credit_units) || 3), 0);
+  const totalCredits = rawList.reduce((acc, m) => acc + (Number(m.credit_units) || 0), 0);
   const totalAttended = rawList.reduce((acc, m) => acc + (Number(m.attended) || 0), 0);
   const totalHeld = rawList.reduce((acc, m) => acc + (Number(m.total_classes) || 0), 0);
   const totalMissed = rawList.reduce((acc, m) => acc + (Number(m.missed) || 0), 0);
   const totalPending = rawList.reduce((acc, m) => acc + (Number(m.pending) || 0), 0);
-  const averageRate = totalHeld > 0 ? Math.round((totalAttended / totalHeld) * 100) : 91;
+  const averageRate = totalHeld > 0 ? Math.round((totalAttended / totalHeld) * 100) : 0;
 
-  // Donut values: attended % (e.g. 91%), missed % (e.g. 6%), pending % (e.g. 3%)
-  const attendedPct = totalHeld > 0 ? Math.round((totalAttended / totalHeld) * 100) : 91;
-  const missedPct = totalHeld > 0 ? Math.round((totalMissed / totalHeld) * 100) : 6;
-  const pendingPct = totalHeld > 0 ? Math.max(0, 100 - attendedPct - missedPct) : 3;
+  // Donut values
+  const attendedPct = totalHeld > 0 ? Math.round((totalAttended / totalHeld) * 100) : 0;
+  const missedPct = totalHeld > 0 ? Math.round((totalMissed / totalHeld) * 100) : 0;
+  const pendingPct = totalHeld > 0 ? Math.max(0, 100 - attendedPct - missedPct) : 0;
 
   return (
     <div className="mod-page-container">
@@ -2965,7 +2893,7 @@ export function StudentProfile() {
           <div className="mod-metric-content">
             <span className="mod-metric-label">Average Attendance</span>
             <strong className="mod-metric-val">{averageRate}%</strong>
-            <span className="mod-metric-trend">↑ 4% from last month</span>
+            <span className="mod-metric-trend">{totalHeld > 0 ? `${averageRate}% attendance rate` : 'Semester average'}</span>
           </div>
         </div>
 
@@ -2975,7 +2903,7 @@ export function StudentProfile() {
           </div>
           <div className="mod-metric-content">
             <span className="mod-metric-label">Classes Attended</span>
-            <strong className="mod-metric-val">{totalAttended} / {totalHeld || 20}</strong>
+            <strong className="mod-metric-val">{totalAttended} / {totalHeld}</strong>
             <div className="mod-progress-wrap">
               <div className="mod-progress-bar">
                 <div className="mod-progress-fill" style={{ width: `${attendedPct}%` }} />
@@ -3093,7 +3021,7 @@ export function StudentProfile() {
               })}
               {!modules.length && (
                 <div className="mod-empty-state">
-                  <p>No modules match "{search}".</p>
+                  <p>{search ? `No modules match "${search}".` : 'No registered modules found for this semester. Modules added by the HOD will appear here.'}</p>
                 </div>
               )}
             </div>

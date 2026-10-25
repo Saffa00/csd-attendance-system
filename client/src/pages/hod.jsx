@@ -410,8 +410,8 @@ export function HodHome() {
           </div>
           <div className="hod-stat-data">
             <span className="hod-stat-label">Total Students</span>
-            <strong className="hod-stat-value">{d?.students || 250}</strong>
-            <span className="hod-stat-trend up">↑ +12 this semester</span>
+            <strong className="hod-stat-value">{d?.students || 0}</strong>
+            <span className="hod-stat-trend">Enrolled students</span>
           </div>
         </div>
 
@@ -421,8 +421,8 @@ export function HodHome() {
           </div>
           <div className="hod-stat-data">
             <span className="hod-stat-label">Lecturers</span>
-            <strong className="hod-stat-value">{d?.lecturers || 12}</strong>
-            <span className="hod-stat-trend up">↑ +2 this semester</span>
+            <strong className="hod-stat-value">{d?.lecturers || 0}</strong>
+            <span className="hod-stat-trend">Faculty members</span>
           </div>
         </div>
 
@@ -445,7 +445,7 @@ export function HodHome() {
           <div className="hod-stat-data">
             <span className="hod-stat-label">Attendance Rate</span>
             <strong className="hod-stat-value">{overallRate}%</strong>
-            <span className="hod-stat-trend up">↑ +5% from last month</span>
+            <span className="hod-stat-trend">Overall departmental</span>
           </div>
         </div>
       </div>
@@ -1667,8 +1667,8 @@ export function HodAttendance() {
             const sess = r.class_sessions || {};
             const course = sess.timetable_entries?.courses || {};
             return (
-              <div className="row" key={r.id}>
-                <div>
+              <div className="row" key={r.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
+                <div style={{ minWidth: 0, flex: '1 1 200px' }}>
                   <strong>{student.full_name}</strong> {student.student_id ? <span className="muted">({student.student_id})</span> : ''}
                   <p className="muted small">
                     {course.code} (Level {student.level}) · {fmtDate(sess.session_date)} · {fmtDateTime(r.submitted_at)}
