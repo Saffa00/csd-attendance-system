@@ -232,7 +232,7 @@ function RecentAttendanceRecordsTable({ records = [], onViewRecord }) {
       date: sessionDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }),
       time: subDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }),
       status: r.status || 'approved',
-      venue: entry?.venues?.name || 'Main Hall',
+      venue: entry?.venues?.name || 'Venue TBA',
       review_note: r.review_note
     };
   }) : fallback;

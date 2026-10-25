@@ -1529,7 +1529,7 @@ export function StudentTimetable() {
                           }}>
                             <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                               <MapPin size={13} color="#94a3b8" />
-                              {c.venues?.name || 'Lecture Hall B (Faculty of Tech)'}
+                              {c.venues?.name || 'Venue TBA'}
                             </span>
                             <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                               <User size={13} color="#94a3b8" />

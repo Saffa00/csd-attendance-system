@@ -51,13 +51,7 @@ const DEFAULT_MODULES = [
   { code: 'TELE 111', title: 'Introduction to Telecommunication Systems', level: 1, to: '/modules' }
 ];
 
-const VENUES = [
-  { name: 'Lecture Hall A', sub: 'Main Campus (200 capacity)', to: '/venues' },
-  { name: 'Lecture Hall B', sub: 'Faculty of Tech (100 capacity)', to: '/venues' },
-  { name: 'Computer Lab 1', sub: 'Software Lab (40 capacity)', to: '/venues' },
-  { name: 'Computer Lab 2', sub: 'Hardware Lab (40 capacity)', to: '/venues' },
-  { name: 'Hardware & Networking Lab', sub: 'Networking Lab (30 capacity)', to: '/venues' }
-];
+
 
 export default function GlobalSearchBar({ role = 'student' }) {
   const [query, setQuery] = useState('');
@@ -82,7 +76,7 @@ export default function GlobalSearchBar({ role = 'student' }) {
     return () => { active = false; };
   }, [role]);
 
-  // Combine pages, modules, and venues
+  // Combine pages and modules only (venues are managed by HOD — no hardcoded suggestions)
   const allItems = useMemo(() => {
     const pages = (DEFAULT_PAGES[role] || DEFAULT_PAGES.student).map(p => ({
       ...p,
@@ -100,16 +94,7 @@ export default function GlobalSearchBar({ role = 'student' }) {
       icon: BookOpen
     }));
 
-    const venueItems = VENUES.map(v => ({
-      label: v.name,
-      sub: v.sub,
-      to: '/venues',
-      category: 'VENUE',
-      badgeClass: 'bg-amber-100 text-amber-700',
-      icon: MapPin
-    }));
-
-    return [...pages, ...moduleItems, ...venueItems];
+    return [...pages, ...moduleItems];
   }, [role, liveModules]);
 
   // Filter items matching query

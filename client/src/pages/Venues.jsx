@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import {
   MapPin, Plus, Navigation, CheckCircle, AlertCircle, Edit2, ShieldAlert,
-  Calendar, ChevronDown, Monitor, Laptop, Network, Users, Landmark,
+  Calendar, ChevronDown, Landmark,
   ArrowRight, Award, CheckCircle2, BookOpen, BarChart2, Star,
   TrendingUp, Compass, ExternalLink, X, ShieldCheck, Camera, Upload, Trash2, Image as ImageIcon
 } from 'lucide-react';
@@ -10,103 +10,11 @@ import { apiFetch } from '../api';
 import { useAuth } from '../auth';
 import { Loading, Empty, Modal } from '../ui';
 
-// Default predefined venues matching department layout with dedicated photos
-const DEFAULT_VENUES = [
-  {
-    id: 'venue-1',
-    name: 'Computer Lab 1',
-    subtitle: 'Software Lab',
-    campus_building: 'Main Campus - Department-wide',
-    latitude: 8.46570,
-    longitude: -13.23170,
-    radius_m: 50,
-    capacity: 40,
-    seating: 40,
-    is_active: true,
-    icon: Monitor,
-    iconColor: 'text-blue-600 bg-blue-50 border-blue-100',
-    image_url: 'https://images.unsplash.com/photo-1562774053-701939374585?auto=format&fit=crop&w=800&q=80'
-  },
-  {
-    id: 'venue-2',
-    name: 'Computer Lab 2',
-    subtitle: 'Main Campus',
-    campus_building: 'Main Campus - Department-wide',
-    latitude: 8.46580,
-    longitude: -13.23190,
-    radius_m: 50,
-    capacity: 40,
-    seating: 40,
-    is_active: true,
-    icon: Laptop,
-    iconColor: 'text-emerald-600 bg-emerald-50 border-emerald-100',
-    image_url: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=800&q=80'
-  },
-  {
-    id: 'venue-3',
-    name: 'Hardware & Networking Lab',
-    subtitle: 'Networking Lab',
-    campus_building: 'Main Campus - Department-wide',
-    latitude: 8.46590,
-    longitude: -13.23180,
-    radius_m: 50,
-    capacity: 30,
-    seating: 30,
-    is_active: true,
-    icon: Network,
-    iconColor: 'text-purple-600 bg-purple-50 border-purple-100',
-    image_url: 'https://images.unsplash.com/photo-1544197150-b99a580bb7a8?auto=format&fit=crop&w=800&q=80'
-  },
-  {
-    id: 'venue-4',
-    name: 'Lecture Hall A',
-    subtitle: 'Large Lecture Hall',
-    campus_building: 'Main Campus - Department-wide',
-    latitude: 8.46560,
-    longitude: -13.23140,
-    radius_m: 80,
-    capacity: 200,
-    seating: 200,
-    is_active: true,
-    icon: Users,
-    iconColor: 'text-amber-600 bg-amber-50 border-amber-100',
-    image_url: 'https://images.unsplash.com/photo-1541829070764-84a7d30dd3f3?auto=format&fit=crop&w=800&q=80'
-  },
-  {
-    id: 'venue-5',
-    name: 'Lecture Hall B',
-    subtitle: 'Faculty of Tech',
-    campus_building: 'Main Campus - Department-wide',
-    latitude: 8.46550,
-    longitude: -13.23150,
-    radius_m: 60,
-    capacity: 100,
-    seating: 100,
-    is_active: true,
-    icon: Landmark,
-    iconColor: 'text-teal-600 bg-teal-50 border-teal-100',
-    image_url: 'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=800&q=80'
-  }
-];
+
 
 export const getVenueImage = (venue) => {
   if (venue?.image_url) return venue.image_url;
-  const name = (venue?.name || '').toLowerCase();
-  if (name.includes('lab 1') || name.includes('software')) {
-    return 'https://images.unsplash.com/photo-1562774053-701939374585?auto=format&fit=crop&w=800&q=80';
-  }
-  if (name.includes('lab 2')) {
-    return 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=800&q=80';
-  }
-  if (name.includes('network') || name.includes('hardware')) {
-    return 'https://images.unsplash.com/photo-1544197150-b99a580bb7a8?auto=format&fit=crop&w=800&q=80';
-  }
-  if (name.includes('hall a')) {
-    return 'https://images.unsplash.com/photo-1541829070764-84a7d30dd3f3?auto=format&fit=crop&w=800&q=80';
-  }
-  if (name.includes('hall b') || name.includes('hall') || name.includes('auditorium') || name.includes('theatre')) {
-    return 'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=800&q=80';
-  }
+  // Generic classroom/building fallback
   return 'https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&w=800&q=80';
 };
 
@@ -244,32 +152,18 @@ export default function Venues() {
     load();
   }, []);
 
-  // Merge DB venues with default venues
+  // Only use real DB venues — no predefined defaults
   const venuesList = useMemo(() => {
-    if (!dbVenues || dbVenues.length === 0) return DEFAULT_VENUES;
-
-    const merged = dbVenues.map((v, i) => {
-      const match = DEFAULT_VENUES.find(d => d.name.toLowerCase() === v.name.toLowerCase());
-      return {
-        ...v,
-        subtitle: match?.subtitle || (v.level ? `Level ${v.level} Venue` : 'Department Venue'),
-        campus_building: v.campus_building || match?.campus_building || 'Main Campus - Department-wide',
-        capacity: v.capacity || match?.capacity || 50,
-        seating: v.seating || match?.seating || 50,
-        icon: match?.icon || Landmark,
-        iconColor: match?.iconColor || 'text-blue-600 bg-blue-50 border-blue-100',
-        image_url: v.image_url || match?.image_url || ''
-      };
-    });
-
-    // If DB has fewer than 5, complement with defaults
-    DEFAULT_VENUES.forEach(d => {
-      if (!merged.some(m => m.name.toLowerCase() === d.name.toLowerCase())) {
-        merged.push(d);
-      }
-    });
-
-    return merged;
+    return (dbVenues || []).map(v => ({
+      ...v,
+      subtitle: v.level ? `Level ${v.level} Venue` : 'Department Venue',
+      campus_building: v.campus_building || 'Main Campus - Department-wide',
+      capacity: v.capacity || 50,
+      seating: v.seating || 50,
+      icon: Landmark,
+      iconColor: 'text-blue-600 bg-blue-50 border-blue-100',
+      image_url: v.image_url || ''
+    }));
   }, [dbVenues]);
 
   const openNew = () => {
